@@ -7,7 +7,8 @@ import os
 from datetime import datetime
 
 # 🔥 IMPORTANT: Use Keras instead of TensorFlow
-from keras.models import load_model
+import tensorflow as tf
+model = tf.keras.models.load_model("model.h5")
 
 # ---------------- CONFIG ----------------
 st.set_page_config(page_title="RecycleVision Pro", layout="wide")
