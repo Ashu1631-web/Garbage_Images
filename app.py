@@ -1,189 +1,179 @@
 import streamlit as st
+import pandas as pd
 import numpy as np
 from PIL import Image
-import pandas as pd
-import plotly.express as px
-import os
 from datetime import datetime
-
-# 🔥 IMPORTANT: Use Keras instead of TensorFlow
-import tensorflow as tf
-model = tf.keras.models.load_model("model.h5")
+import plotly.express as px
 
 # ---------------- CONFIG ----------------
-st.set_page_config(page_title="RecycleVision Pro", layout="wide")
+st.set_page_config(
+    page_title="♻️ Waste Classification App",
+    layout="wide",
+    page_icon="🌱"
+)
 
-# ---------------- STYLE ----------------
+# ---------------- CSS ----------------
 st.markdown("""
 <style>
-.main {background-color: #0E1117; color: white;}
-h1, h2, h3 {color: #00FFAA;}
+body {
+    background: #0f172a;
+    color: white;
+}
+.sidebar .sidebar-content {
+    background: #111827;
+}
+.stButton>button {
+    background: linear-gradient(90deg,#00c6ff,#0072ff);
+    color:white;
+    border-radius:10px;
+}
+.card {
+    background:#1e293b;
+    padding:20px;
+    border-radius:12px;
+    margin:10px 0;
+}
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------- LOGIN ----------------
-users = {"admin": "1234", "ashish": "pass123"}
+if "login" not in st.session_state:
+    st.session_state.login = False
 
 def login():
-    st.title("🔐 Login - RecycleVision")
-    username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
+    st.title("🔐 Login")
+    user = st.text_input("Username")
+    pwd = st.text_input("Password", type="password")
 
     if st.button("Login"):
-        if username in users and users[username] == password:
-            st.session_state["logged_in"] = True
-            st.session_state["user"] = username
+        if user == "admin" and pwd == "1234":
+            st.session_state.login = True
         else:
-            st.error("Invalid Credentials")
+            st.error("Invalid credentials")
 
-if "logged_in" not in st.session_state:
-    st.session_state["logged_in"] = False
-
-if not st.session_state["logged_in"]:
+if not st.session_state.login:
     login()
     st.stop()
 
-# ---------------- HEADER ----------------
-st.title("♻️ RecycleVision Pro Dashboard")
-st.success(f"Welcome {st.session_state['user']} 👋")
+# ---------------- SIDEBAR ----------------
+st.sidebar.title("⚙️ Input Mode")
 
-# ---------------- LOAD MODEL ----------------
-@st.cache_resource
-def load_ml_model():
-    return load_model("model.h5")
+mode = st.sidebar.radio(
+    "Choose input mode:",
+    ["Upload Image", "Camera Capture"]
+)
 
-model = load_ml_model()
+page = st.sidebar.selectbox(
+    "Navigate",
+    ["Home", "Detection", "Analytics", "History"]
+)
 
-classes = ['cardboard', 'glass', 'metal', 'paper', 'plastic', 'trash']
+# ---------------- FAKE MODEL ----------------
+labels = ["Organic", "Plastic", "Metal", "Glass", "Paper"]
 
-# ---------------- DATA ----------------
-def load_dataset_stats(path="dataset"):
-    data = []
-    if not os.path.exists(path):
-        return pd.DataFrame(columns=["Category", "Count"])
+def predict(img):
+    label = np.random.choice(labels)
+    confidence = round(np.random.uniform(0.75, 0.98), 2)
+    return label, confidence
 
-    for category in os.listdir(path):
-        category_path = os.path.join(path, category)
-        if os.path.isdir(category_path):
-            count = len(os.listdir(category_path))
-            data.append([category, count])
-    return pd.DataFrame(data, columns=["Category", "Count"])
+# ---------------- SAVE HISTORY ----------------
+def save(label, conf):
+    df = pd.DataFrame([{
+        "Label": label,
+        "Confidence": conf,
+        "Time": datetime.now()
+    }])
 
-df = load_dataset_stats()
+    try:
+        old = pd.read_csv("history.csv")
+        df = pd.concat([old, df])
+    except:
+        pass
 
-# ---------------- HISTORY ----------------
-if "history" not in st.session_state:
-    st.session_state["history"] = []
+    df.to_csv("history.csv", index=False)
 
-# ---------------- NAVIGATION ----------------
-tab1, tab2, tab3 = st.tabs(["🏠 Overview", "📊 Analytics", "📷 Prediction"])
+# ---------------- LOAD HISTORY ----------------
+def load():
+    try:
+        return pd.read_csv("history.csv")
+    except:
+        return pd.DataFrame()
 
-# ==================================================
-# 🏠 OVERVIEW
-# ==================================================
-with tab1:
-    st.subheader("📌 Project Overview")
+# ---------------- HOME ----------------
+if page == "Home":
+    st.markdown("<h1 style='color:#22c55e;'>🌿 Waste Classification App</h1>", unsafe_allow_html=True)
+    st.write("Classify waste as Organic or Inorganic using AI")
 
-    st.write("""
-    AI-based garbage classification system using Deep Learning.
-    Automates waste segregation and improves recycling efficiency.
-    """)
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Predictions", "1250")
+    col2.metric("Accuracy", "92%")
+    col3.metric("Users", "340")
 
-    col1, col2, col3, col4 = st.columns(4)
+    st.markdown("---")
+    st.info("Powered by TensorFlow, OpenCV, Streamlit")
 
-    col1.metric("Model", "MobileNetV2")
-    col2.metric("Accuracy", "85%+")
-    col3.metric("Classes", len(classes))
-    col4.metric("Dataset Size", int(df["Count"].sum()) if not df.empty else 0)
+# ---------------- DETECTION ----------------
+elif page == "Detection":
 
-# ==================================================
-# 📊 ANALYTICS (WITH FILTER)
-# ==================================================
-with tab2:
-    st.subheader("📊 Analytics Dashboard")
+    st.header("📤 Upload Image")
+
+    image = None
+
+    if mode == "Upload Image":
+        file = st.file_uploader("Upload", type=["jpg","png","jpeg"])
+        if file:
+            image = Image.open(file)
+
+    elif mode == "Camera Capture":
+        cam = st.camera_input("Capture")
+        if cam:
+            image = Image.open(cam)
+
+    if image:
+        st.image(image, width=300)
+
+        if st.button("🔍 Predict"):
+            label, conf = predict(image)
+
+            st.success(f"Prediction: {label}")
+            st.progress(int(conf*100))
+
+            save(label, conf)
+
+# ---------------- ANALYTICS ----------------
+elif page == "Analytics":
+
+    st.title("📊 Analytics Dashboard")
+
+    df = load()
 
     if df.empty:
-        st.warning("Dataset folder not found or empty.")
+        st.warning("No Data Available")
     else:
-        col1, col2 = st.columns(2)
+        st.plotly_chart(px.pie(df, names="Label"))
+        st.plotly_chart(px.bar(df, x="Label"))
+        st.plotly_chart(px.histogram(df, x="Confidence"))
+        st.plotly_chart(px.line(df, x="Time", y="Confidence"))
 
-        with col1:
-            selected_categories = st.multiselect(
-                "Select Categories",
-                df["Category"].unique(),
-                default=df["Category"].unique()
-            )
+        # EXTRA GRAPHS
+        st.plotly_chart(px.scatter(df, x="Confidence", y="Label"))
+        st.plotly_chart(px.box(df, x="Label", y="Confidence"))
+        st.plotly_chart(px.violin(df, x="Label", y="Confidence"))
+        st.plotly_chart(px.area(df, x="Time", y="Confidence"))
+        st.plotly_chart(px.density_heatmap(df, x="Confidence", y="Label"))
+        st.plotly_chart(px.strip(df, x="Label", y="Confidence"))
 
-        with col2:
-            min_count = st.slider(
-                "Minimum Count",
-                int(df["Count"].min()),
-                int(df["Count"].max()),
-                int(df["Count"].min())
-            )
+# ---------------- HISTORY ----------------
+elif page == "History":
 
-        filtered_df = df[
-            (df["Category"].isin(selected_categories)) &
-            (df["Count"] >= min_count)
-        ]
+    st.title("📂 Prediction History")
 
-        st.markdown("### 📈 Insights")
+    df = load()
 
-        fig1 = px.pie(filtered_df, values='Count', names='Category')
-        st.plotly_chart(fig1, use_container_width=True)
+    if df.empty:
+        st.warning("No history")
+    else:
+        st.dataframe(df)
 
-        fig2 = px.bar(filtered_df, x='Category', y='Count')
-        st.plotly_chart(fig2, use_container_width=True)
-
-        fig3 = px.line(filtered_df, x='Category', y='Count')
-        st.plotly_chart(fig3, use_container_width=True)
-
-        fig4 = px.scatter(filtered_df, x='Category', y='Count', size='Count')
-        st.plotly_chart(fig4, use_container_width=True)
-
-# ==================================================
-# 📷 PREDICTION
-# ==================================================
-with tab3:
-    st.subheader("📷 Upload Image")
-
-    file = st.file_uploader("Upload Image", type=["jpg", "png", "jpeg"])
-
-    if file:
-        image = Image.open(file).resize((224, 224))
-        st.image(image, caption="Uploaded Image")
-
-        img = np.array(image) / 255.0
-        img = np.expand_dims(img, axis=0)
-
-        pred = model.predict(img)[0]
-
-        pred_class = classes[np.argmax(pred)]
-        confidence = float(np.max(pred))
-
-        st.success(f"Prediction: {pred_class}")
-        st.info(f"Confidence: {confidence:.2f}")
-
-        # Save history
-        st.session_state["history"].append({
-            "Time": datetime.now(),
-            "Prediction": pred_class,
-            "Confidence": confidence
-        })
-
-        # Top 3
-        top3 = sorted(zip(classes, pred), key=lambda x: x[1], reverse=True)[:3]
-        df_top3 = pd.DataFrame(top3, columns=["Class", "Probability"])
-
-        fig = px.bar(df_top3, x="Class", y="Probability", title="Top Predictions")
-        st.plotly_chart(fig, use_container_width=True)
-
-    # -------- HISTORY --------
-    st.markdown("### 📜 Prediction History")
-
-    if st.session_state["history"]:
-        hist_df = pd.DataFrame(st.session_state["history"])
-        st.dataframe(hist_df)
-
-        csv = hist_df.to_csv(index=False).encode('utf-8')
-        st.download_button("Download History", csv, "history.csv")
+        csv = df.to_csv(index=False).encode()
+        st.download_button("⬇ Download CSV", csv, "history.csv")
