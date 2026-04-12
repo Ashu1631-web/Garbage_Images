@@ -32,43 +32,32 @@ labels = load_labels()
 
 # ---------------- LOGIN BACKGROUND (FINAL FIX) ----------------
 def set_login_bg():
-    file_path = "garbage_bg.jpg"
+    st.markdown("""
+    <style>
+    .stApp {
+        background: url("https://www.kelvinindia.in/blog/wp-content/uploads/2024/06/Waste-Management.jpg") no-repeat center center fixed;
+        background-size: cover;
+    }
 
-    if os.path.exists(file_path):
-        with open(file_path, "rb") as f:
-            encoded = base64.b64encode(f.read()).decode()
+    /* DARK OVERLAY */
+    .stApp::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.7);
+        z-index: 0;
+    }
 
-        st.markdown(f"""
-        <style>
-        html, body, .stApp {{
-            height: 100%;
-        }}
-
-        .stApp {{
-            background: url("https://www.kelvinindia.in/blog/wp-content/uploads/2024/06/Waste-Management.jpg,{encoded}") no-repeat center center fixed;
-            background-size: cover;
-        }}
-
-        /* DARK OVERLAY */
-        .stApp::before {{
-            content: "";
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.7);
-            z-index: 0;
-        }}
-
-        /* CONTENT ABOVE OVERLAY */
-        .block-container {{
-            position: relative;
-            z-index: 1;
-        }}
-        </style>
-        """, unsafe_allow_html=True)
-
+    /* CONTENT ABOVE OVERLAY */
+    .block-container {
+        position: relative;
+        z-index: 1;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 # ---------------- MAIN UI ----------------
 def set_ui():
     st.markdown("""
