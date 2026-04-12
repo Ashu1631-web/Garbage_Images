@@ -1,27 +1,22 @@
-# ♻️ Waste Classification AI (RecycleVision)
+# ♻️ Waste Classification AI
 
-An AI-powered web application that classifies garbage images into categories such as cardboard, glass, metal, paper, plastic, and trash using Deep Learning (MobileNetV2).
-
----
+AI-powered garbage classification web app using Deep Learning.
 
 ## 🚀 Features
 
-- 🔐 Login System (Basic Authentication)
-- 📸 Image Upload & Camera Capture
-- 🧠 AI-based Waste Classification (model.h5)
-- 📊 Confidence Score with Prediction
-- 📦 Bounding Box Visualization
-- 📈 Analytics Dashboard (10+ charts)
-- 📂 Prediction History Tracking
-- 📥 Download Results as CSV
-- 🎨 Modern UI (Glassmorphism + Dark Theme)
+- 🔐 Login System
+- 📸 Upload + Camera Detection
+- 🧠 AI Prediction (model.h5)
+- 📊 10+ Analytics Charts
+- 📂 History Tracking
+- 📥 CSV Download
+- 🎨 Modern UI (Dark + Glass)
+- 🌍 Project Overview Page
 
----
+## 🧠 Model
 
-## 🧠 Model Details
-
-- Architecture: MobileNetV2 (Transfer Learning)
-- Input Size: 160x160
+- MobileNetV2
+- Input: 160x160
 - Classes:
   - cardboard
   - glass
@@ -30,14 +25,4 @@ An AI-powered web application that classifies garbage images into categories suc
   - plastic
   - trash
 
----
-
-📊 Use Cases
-Smart Waste Segregation
-Recycling Automation
-Environmental Monitoring
-Educational Demonstration
-
-
-👨‍💻 Author
-Ashish
+## 📁 Structure
