@@ -3,42 +3,41 @@ import numpy as np
 import pandas as pd
 import cv2
 from PIL import Image
-from datetime import datetime
-import plotly.express as px
 import base64
 import os
+from datetime import datetime
+import plotly.express as px
 
 # ---------------- CONFIG ----------------
 st.set_page_config(
-    page_title="♻️ RecycleVision AI",
+    page_title="♻️ Waste Classification AI",
     layout="wide",
     page_icon="🌱"
 )
 
-# ---------------- SAFE MODEL LOAD ----------------
+# ---------------- LOAD MODEL ----------------
 @st.cache_resource
 def load_model_safe():
     try:
         from tensorflow.keras.models import load_model
-        model = load_model("model.h5", compile=False)
-        return model
+        return load_model("model.h5", compile=False)
     except Exception as e:
         return None
 
 model = load_model_safe()
 
-# ---------------- LABELS ----------------
+# ---------------- LOAD LABELS ----------------
 def load_labels():
     try:
         with open("labels.txt") as f:
             return [i.strip() for i in f.readlines()]
     except:
-        return ["Plastic", "Metal", "Glass", "Paper", "Organic"]
+        return ["cardboard","glass","metal","paper","plastic","trash"]
 
 labels = load_labels()
 
-# ---------------- LOGIN BG ----------------
-def set_bg():
+# ---------------- UI STYLES ----------------
+def set_login_bg():
     if os.path.exists("garbage_bg.jpg"):
         with open("garbage_bg.jpg", "rb") as f:
             data = base64.b64encode(f.read()).decode()
@@ -51,8 +50,7 @@ def set_bg():
         </style>
         """, unsafe_allow_html=True)
 
-# ---------------- GRADIENT ----------------
-def set_gradient():
+def set_main_ui():
     st.markdown("""
     <style>
     .stApp {
@@ -61,12 +59,18 @@ def set_gradient():
     }
     [data-testid="stSidebar"] {
         background: rgba(255,255,255,0.05);
-        backdrop-filter: blur(12px);
+        backdrop-filter: blur(10px);
     }
     .glass {
         background: rgba(255,255,255,0.08);
         padding:20px;
         border-radius:15px;
+        margin:10px 0;
+    }
+    .stButton>button {
+        background: linear-gradient(90deg,#00c6ff,#0072ff);
+        color:white;
+        border-radius:10px;
     }
     </style>
     """, unsafe_allow_html=True)
@@ -76,8 +80,9 @@ if "login" not in st.session_state:
     st.session_state.login = False
 
 def login():
-    set_bg()
-    st.title("🔐 Login")
+    set_login_bg()
+    st.markdown("<h1 style='text-align:center;'>♻️ Waste AI</h1>", unsafe_allow_html=True)
+
     user = st.text_input("Username")
     pwd = st.text_input("Password", type="password")
 
@@ -85,22 +90,21 @@ def login():
         if user == "admin" and pwd == "1234":
             st.session_state.login = True
         else:
-            st.error("Invalid Credentials")
+            st.error("Invalid credentials")
 
 if not st.session_state.login:
     login()
     st.stop()
 
-# ---------------- AFTER LOGIN ----------------
-set_gradient()
+# ---------------- MAIN UI ----------------
+set_main_ui()
 
 # ---------------- PREDICTION ----------------
 def predict_image(image):
     if model is None:
-        # fallback (no crash)
-        return "Plastic", 0.85
+        return "Model Error", 0.0
 
-    img = image.resize((224,224))
+    img = image.resize((160,160))
     img = np.array(img)/255.0
     img = np.expand_dims(img, axis=0)
 
@@ -115,10 +119,10 @@ def draw_box(image, label, conf):
     img = np.array(image)
     h, w, _ = img.shape
 
-    cv2.rectangle(img, (20,20), (w-20,h-20), (0,255,0), 3)
+    cv2.rectangle(img,(20,20),(w-20,h-20),(0,255,0),2)
 
     text = f"{label} ({round(conf*100,2)}%)"
-    cv2.putText(img, text, (30,40),
+    cv2.putText(img,text,(30,40),
                 cv2.FONT_HERSHEY_SIMPLEX,1,(0,255,0),2)
 
     return img
@@ -145,7 +149,10 @@ def load_history():
 # ---------------- SIDEBAR ----------------
 st.sidebar.title("⚙️ Input Mode")
 
-mode = st.sidebar.radio("", ["Upload Image","Camera Capture"])
+mode = st.sidebar.radio(
+    "Choose input mode:",
+    ["Upload Image", "Camera"]
+)
 
 page = st.sidebar.selectbox(
     "Navigate",
@@ -154,12 +161,14 @@ page = st.sidebar.selectbox(
 
 # ---------------- HOME ----------------
 if page == "Home":
-    st.title("🌿 RecycleVision AI")
+    st.title("🌿 Smart Waste Classification")
 
-    c1,c2,c3 = st.columns(3)
-    c1.metric("Predictions","1250")
-    c2.metric("Accuracy","94%")
-    c3.metric("Users","350")
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Model Accuracy", "~75%")
+    col2.metric("Classes", "6")
+    col3.metric("Status", "Active")
+
+    st.markdown('<div class="glass">AI-powered garbage classification system</div>', unsafe_allow_html=True)
 
 # ---------------- DETECTION ----------------
 elif page == "Detection":
@@ -169,7 +178,7 @@ elif page == "Detection":
     image = None
 
     if mode == "Upload Image":
-        file = st.file_uploader("Upload", type=["jpg","png"])
+        file = st.file_uploader("Upload Image", type=["jpg","png","jpeg"])
         if file:
             image = Image.open(file)
 
@@ -181,13 +190,14 @@ elif page == "Detection":
     if image:
         st.image(image, width=300)
 
-        if st.button("Detect"):
+        if st.button("🔍 Detect"):
             label, conf = predict_image(image)
 
             boxed = draw_box(image, label, conf)
-            st.image(boxed)
 
-            st.success(f"{label}")
+            st.image(boxed, caption="Detection Result", use_column_width=True)
+
+            st.success(f"Detected: {label}")
             st.progress(int(conf*100))
 
             save_history(label, conf)
@@ -195,15 +205,17 @@ elif page == "Detection":
 # ---------------- ANALYTICS ----------------
 elif page == "Analytics":
 
+    st.title("📊 Analytics Dashboard")
+
     df = load_history()
 
     if df.empty:
-        st.warning("No data")
+        st.warning("No Data Available")
     else:
         st.plotly_chart(px.pie(df, names="Label"))
         st.plotly_chart(px.bar(df, x="Label"))
-        st.plotly_chart(px.line(df, x="Time", y="Confidence"))
         st.plotly_chart(px.histogram(df, x="Confidence"))
+        st.plotly_chart(px.line(df, x="Time", y="Confidence"))
         st.plotly_chart(px.box(df, x="Label", y="Confidence"))
         st.plotly_chart(px.violin(df, x="Label", y="Confidence"))
         st.plotly_chart(px.scatter(df, x="Confidence", y="Label"))
@@ -214,12 +226,14 @@ elif page == "Analytics":
 # ---------------- HISTORY ----------------
 elif page == "History":
 
+    st.title("📂 Prediction History")
+
     df = load_history()
 
     if df.empty:
-        st.warning("No history")
+        st.warning("No history found")
     else:
         st.dataframe(df)
 
         csv = df.to_csv(index=False).encode()
-        st.download_button("Download CSV", csv, "history.csv")
+        st.download_button("⬇ Download CSV", csv, "history.csv")
