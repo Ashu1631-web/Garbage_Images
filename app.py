@@ -3,12 +3,11 @@ import numpy as np
 import pandas as pd
 import cv2
 from PIL import Image
-import base64
 import os
 from datetime import datetime
 import plotly.express as px
 
-st.set_page_config(page_title="♻️ Garbage Waste Management", layout="wide")
+st.set_page_config(page_title="♻️ Waste AI", layout="wide")
 
 # ---------------- MODEL ----------------
 @st.cache_resource
@@ -30,7 +29,7 @@ def load_labels():
 
 labels = load_labels()
 
-# ---------------- LOGIN BACKGROUND (FINAL FIX) ----------------
+# ---------------- LOGIN BG ----------------
 def set_login_bg():
     st.markdown("""
     <style>
@@ -39,25 +38,24 @@ def set_login_bg():
         background-size: cover;
     }
 
-    /* DARK OVERLAY */
     .stApp::before {
-        content: "";
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.7);
-        z-index: 0;
+        content:"";
+        position:fixed;
+        width:100%;
+        height:100%;
+        background:rgba(0,0,0,0.7);
+        top:0;
+        left:0;
+        z-index:0;
     }
 
-    /* CONTENT ABOVE OVERLAY */
     .block-container {
-        position: relative;
-        z-index: 1;
+        position:relative;
+        z-index:1;
     }
     </style>
     """, unsafe_allow_html=True)
+
 # ---------------- MAIN UI ----------------
 def set_ui():
     st.markdown("""
@@ -81,18 +79,18 @@ def set_ui():
 
 # ---------------- LOGIN ----------------
 if "login" not in st.session_state:
-    st.session_state.login = False
+    st.session_state.login=False
 
 def login():
-    set_login_bg()  # ✅ ONLY login page bg
-    st.title("♻️ Garbage Waste Management Login")
+    set_login_bg()
+    st.title("♻️ Waste AI Login")
 
     u = st.text_input("Username")
     p = st.text_input("Password", type="password")
 
     if st.button("Login"):
-        if u == "ashu" and p == "1234":
-            st.session_state.login = True
+        if u=="admin" and p=="1234":
+            st.session_state.login=True
         else:
             st.error("Invalid login")
 
@@ -101,45 +99,41 @@ if not st.session_state.login:
     st.stop()
 
 # ---------------- AFTER LOGIN ----------------
-set_ui()  # ✅ gradient UI after login
+set_ui()
 
-# ---------------- PREDICTION ----------------
+# ---------------- PREDICT ----------------
 def predict(image):
     if model is None:
-        return "Error", 0
+        return "Error",0
 
-    img = image.resize((160,160))
-    img = np.array(img)/255.0
-    img = np.expand_dims(img,0)
+    img=image.resize((160,160))
+    img=np.array(img)/255.0
+    img=np.expand_dims(img,0)
 
-    pred = model.predict(img)
-    idx = np.argmax(pred)
-    conf = float(np.max(pred))
-    return labels[idx], conf
+    pred=model.predict(img)
+    idx=np.argmax(pred)
+    conf=float(np.max(pred))
+    return labels[idx],conf
 
-def draw(image, label, conf):
-    img = np.array(image)
-    h, w, _ = img.shape
-
+def draw(image,label,conf):
+    img=np.array(image)
+    h,w,_=img.shape
     cv2.rectangle(img,(20,20),(w-20,h-20),(0,255,0),2)
     cv2.putText(img,f"{label} {round(conf*100,2)}%",
                 (30,40),cv2.FONT_HERSHEY_SIMPLEX,1,(0,255,0),2)
-
     return img
 
 # ---------------- HISTORY ----------------
-def save(label, conf):
-    df = pd.DataFrame([{
-        "Label": label,
-        "Confidence": conf,
-        "Time": datetime.now()
+def save(label,conf):
+    df=pd.DataFrame([{
+        "Label":label,
+        "Confidence":conf,
+        "Time":datetime.now()
     }])
-
     if os.path.exists("history.csv"):
-        old = pd.read_csv("history.csv")
-        df = pd.concat([old, df])
-
-    df.to_csv("history.csv", index=False)
+        old=pd.read_csv("history.csv")
+        df=pd.concat([old,df])
+    df.to_csv("history.csv",index=False)
 
 def load():
     if os.path.exists("history.csv"):
@@ -149,36 +143,50 @@ def load():
 # ---------------- SIDEBAR ----------------
 st.sidebar.title("⚙️ Menu")
 
-mode = st.sidebar.radio("Input", ["Upload", "Camera"])
 page = st.sidebar.selectbox("Navigate",
-["Overview","Detection","Analytics","History"])
+["Overview","Detection (Upload)","Camera","Analytics","History"])
 
 # ---------------- OVERVIEW ----------------
-if page == "Overview":
+if page=="Overview":
     st.title("🌍 Project Overview")
 
     st.markdown("""
     <div class="card">
-    <h3>♻️ Garbage Waste Management</h3>
-    <p>This AI model classifies waste into 6 categories using deep learning.</p>
+    <h3>♻️ Smart Waste Management System (AI)</h3>
+
+    <h4>Project Description</h4>
+    <p>This is an AI-powered application designed to automatically identify and classify different types of garbage. 
+    By using Deep Learning, the system helps in sorting waste quickly, making the recycling process more efficient and eco-friendly.</p>
+
+    <h4>🌟 Key Features</h4>
+    <ul>
+    <li><b>Instant Detection:</b> Uses a trained AI model to identify waste from uploaded photos or live camera captures.</li>
+    <li><b>6-Way Classification:</b> Categorizes waste into Cardboard, Glass, Metal, Paper, Plastic, and Trash.</li>
+    <li><b>Smart Analytics:</b> Visualizes waste data using interactive charts.</li>
+    <li><b>Secure Access:</b> Login system for authorized users.</li>
+    <li><b>Data History:</b> Saves scans and allows CSV download.</li>
+    </ul>
+
+    <h4>🛠️ Technologies Used</h4>
+    <ul>
+    <li>Python</li>
+    <li>Streamlit</li>
+    <li>TensorFlow / Keras</li>
+    <li>OpenCV</li>
+    <li>Plotly</li>
+    </ul>
     </div>
     """, unsafe_allow_html=True)
 
-# ---------------- DETECTION ----------------
-elif page == "Detection":
+# ---------------- DETECTION (UPLOAD) ----------------
+elif page=="Detection (Upload)":
 
-    img = None
+    st.title("📤 Upload Detection")
 
-    if mode == "Upload":
-        f = st.file_uploader("Upload Image")
-        if f:
-            img = Image.open(f)
-    else:
-        c = st.camera_input("Capture")
-        if c:
-            img = Image.open(c)
+    file = st.file_uploader("Upload Image", type=["jpg","png","jpeg"])
 
-    if img:
+    if file:
+        img = Image.open(file)
         st.image(img, width=300)
 
         if st.button("Detect"):
@@ -188,27 +196,49 @@ elif page == "Detection":
             st.progress(int(conf*100))
             save(label,conf)
 
+# ---------------- CAMERA ----------------
+elif page=="Camera":
+
+    st.title("📸 Camera Detection")
+
+    cam = st.camera_input("Capture Image")
+
+    if cam:
+        img = Image.open(cam)
+        st.image(img, width=300)
+
+        if st.button("Detect from Camera"):
+            label, conf = predict(img)
+            st.image(draw(img,label,conf))
+            st.success(label)
+            st.progress(int(conf*100))
+            save(label,conf)
+
 # ---------------- ANALYTICS ----------------
-elif page == "Analytics":
+elif page=="Analytics":
+
+    st.title("📊 Analytics Dashboard")
 
     df = load()
 
     if df.empty:
-        st.warning("No data")
+        st.warning("No data available")
     else:
-        st.plotly_chart(px.pie(df,names="Label"))
-        st.plotly_chart(px.bar(df,x="Label"))
-        st.plotly_chart(px.histogram(df,x="Confidence"))
-        st.plotly_chart(px.line(df,x="Time",y="Confidence"))
-        st.plotly_chart(px.box(df,x="Label",y="Confidence"))
-        st.plotly_chart(px.violin(df,x="Label",y="Confidence"))
-        st.plotly_chart(px.scatter(df,x="Confidence",y="Label"))
-        st.plotly_chart(px.area(df,x="Time",y="Confidence"))
-        st.plotly_chart(px.strip(df,x="Label",y="Confidence"))
-        st.plotly_chart(px.density_heatmap(df,x="Confidence",y="Label"))
+        st.plotly_chart(px.pie(df,names="Label",title="Waste Distribution"))
+        st.plotly_chart(px.bar(df,x="Label",title="Count by Category"))
+        st.plotly_chart(px.histogram(df,x="Confidence",title="Confidence Distribution"))
+        st.plotly_chart(px.line(df,x="Time",y="Confidence",title="Confidence Over Time"))
+        st.plotly_chart(px.box(df,x="Label",y="Confidence",title="Confidence Spread"))
+        st.plotly_chart(px.violin(df,x="Label",y="Confidence",title="Density"))
+        st.plotly_chart(px.scatter(df,x="Confidence",y="Label",title="Scatter Plot"))
+        st.plotly_chart(px.area(df,x="Time",y="Confidence",title="Trend Analysis"))
+        st.plotly_chart(px.strip(df,x="Label",y="Confidence",title="Strip Plot"))
+        st.plotly_chart(px.density_heatmap(df,x="Confidence",y="Label",title="Heatmap"))
 
 # ---------------- HISTORY ----------------
-elif page == "History":
+elif page=="History":
+
+    st.title("📂 History")
 
     df = load()
 
