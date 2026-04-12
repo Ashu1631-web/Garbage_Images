@@ -57,6 +57,7 @@ def predict(image):
 
     pred = model.predict(img, verbose=0)
     idx = np.argmax(pred)
+
     return labels[idx], float(np.max(pred)), pred[0]
 
 # ---------------- HISTORY ----------------
@@ -104,7 +105,7 @@ elif page=="Detection (Upload)":
             st.info(f"Confidence: {conf*100:.2f}%")
             st.progress(int(conf*100))
 
-            # 🔥 Probability Breakdown
+            # Probability chart
             prob_df = pd.DataFrame({
                 "Class": labels,
                 "Probability": probs
@@ -131,7 +132,7 @@ elif page=="Camera":
 
             save(label,conf)
 
-# ---------------- ANALYTICS (🔥 15+ CHARTS) ----------------
+# ---------------- ANALYTICS ----------------
 elif page=="Analytics":
 
     st.title("📊 Advanced Analytics Dashboard")
@@ -142,42 +143,24 @@ elif page=="Analytics":
         st.warning("No data available")
     else:
 
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.plotly_chart(px.pie(df, names="Label", title="1. Waste Distribution"))
-
-        with col2:
-            st.plotly_chart(px.bar(df, x="Label", title="2. Count by Category"))
-
+        st.plotly_chart(px.pie(df, names="Label", title="1. Waste Distribution"))
+        st.plotly_chart(px.bar(df, x="Label", title="2. Count by Category"))
         st.plotly_chart(px.histogram(df, x="Confidence", title="3. Confidence Distribution"))
-
-        st.plotly_chart(px.box(df, y="Confidence", title="4. Confidence Box Plot"))
-
+        st.plotly_chart(px.box(df, y="Confidence", title="4. Confidence Box"))
         st.plotly_chart(px.line(df, x="Time", y="Confidence", title="5. Confidence Over Time"))
-
-        st.plotly_chart(px.scatter(df, x="Time", y="Confidence", color="Label", title="6. Time vs Confidence"))
-
-        st.plotly_chart(px.area(df, x="Time", y="Confidence", title="7. Area Confidence Trend"))
-
-        st.plotly_chart(px.violin(df, y="Confidence", box=True, title="8. Confidence Spread"))
-
+        st.plotly_chart(px.scatter(df, x="Time", y="Confidence", color="Label", title="6. Scatter"))
+        st.plotly_chart(px.area(df, x="Time", y="Confidence", title="7. Area"))
+        st.plotly_chart(px.violin(df, y="Confidence", box=True, title="8. Violin"))
         st.plotly_chart(px.density_heatmap(df, x="Label", y="Confidence", title="9. Heatmap"))
+        st.plotly_chart(px.ecdf(df, x="Confidence", title="10. ECDF"))
+        st.plotly_chart(px.strip(df, x="Label", y="Confidence", title="11. Strip"))
+        st.plotly_chart(px.funnel(df, x="Confidence", y="Label", title="12. Funnel"))
 
-        st.plotly_chart(px.ecdf(df, x="Confidence", title="10. ECDF Plot"))
-
-        st.plotly_chart(px.strip(df, x="Label", y="Confidence", title="11. Strip Plot"))
-
-        st.plotly_chart(px.funnel(df, x="Confidence", y="Label", title="12. Funnel View"))
-
-        # Aggregations
         agg = df.groupby("Label")["Confidence"].mean().reset_index()
 
-        st.plotly_chart(px.bar(agg, x="Label", y="Confidence", title="13. Avg Confidence per Class"))
-
-        st.plotly_chart(px.line(agg, x="Label", y="Confidence", title="14. Trend by Class"))
-
-        st.plotly_chart(px.scatter(agg, x="Label", y="Confidence", size="Confidence", title="15. Bubble Chart"))
+        st.plotly_chart(px.bar(agg, x="Label", y="Confidence", title="13. Avg Confidence"))
+        st.plotly_chart(px.line(agg, x="Label", y="Confidence", title="14. Trend"))
+        st.plotly_chart(px.scatter(agg, x="Label", y="Confidence", size="Confidence", title="15. Bubble"))
 
 # ---------------- HISTORY ----------------
 elif page=="History":
