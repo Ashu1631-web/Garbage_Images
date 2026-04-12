@@ -6,16 +6,28 @@ from PIL import Image
 import os
 from datetime import datetime
 import plotly.express as px
+import gdown  # ✅ NEW
 
 st.set_page_config(page_title="♻️ Garbage Waste Management", layout="wide")
 
-# ---------------- MODEL (FIXED FOR KERAS 3) ----------------
+# ---------------- MODEL DOWNLOAD (NEW) ----------------
+MODEL_PATH = "model_fixed.h5"
+
+def download_model():
+    if not os.path.exists(MODEL_PATH):
+        with st.spinner("⬇️ Downloading AI Model..."):
+            url = "PASTE_YOUR_GOOGLE_DRIVE_LINK_HERE"  # 🔥 Replace this
+            gdown.download(url, MODEL_PATH, quiet=False)
+
+download_model()
+
+# ---------------- MODEL (FIXED) ----------------
 @st.cache_resource
 def load_model_safe():
     try:
-        from keras.models import load_model  # 🔥 IMPORTANT CHANGE
+        from keras.models import load_model
 
-        model = load_model("model_fixed.h5", compile=False)
+        model = load_model(MODEL_PATH, compile=False)
 
         st.success("✅ Model Loaded Successfully")
         return model
@@ -26,6 +38,7 @@ def load_model_safe():
 
 model = load_model_safe()
 
+# ---------------- LABELS ----------------
 def load_labels():
     try:
         with open("labels.txt") as f:
@@ -87,7 +100,7 @@ if "login" not in st.session_state:
 
 def login():
     set_login_bg()
-    st.title("♻️ Garbage Waste Management Login")
+    st.title("♻️ Garbage Waste Management")
 
     u = st.text_input("Username")
     p = st.text_input("Password", type="password")
@@ -105,13 +118,13 @@ if not st.session_state.login:
 # ---------------- AFTER LOGIN ----------------
 set_ui()
 
-# ---------------- PREDICTION (FIXED) ----------------
+# ---------------- PREDICTION ----------------
 def predict(image):
     if model is None:
         return "Model Not Loaded", 0.0
 
     try:
-        img = image.resize((160,160))
+        img = image.resize((160,160))  # ✅ FIXED SIZE
         img = np.array(img) / 255.0
         img = np.expand_dims(img, axis=0)
 
@@ -125,13 +138,14 @@ def predict(image):
         st.error(f"Prediction Error: {e}")
         return "Prediction Error", 0.0
 
+# ---------------- DRAW ----------------
 def draw(image, label, conf):
     img = np.array(image)
     h,w,_ = img.shape
 
     cv2.rectangle(img,(20,20),(w-20,h-20),(0,255,0),2)
 
-    text = f"{label} ({round(conf*100,2)}%)" if conf > 0 else "No Prediction"
+    text = f"{label} ({round(conf*100,2)}%)"
 
     cv2.putText(img,text,(30,40),
                 cv2.FONT_HERSHEY_SIMPLEX,1,(0,255,0),2)
@@ -168,32 +182,11 @@ if page=="Overview":
     st.markdown("""
     <div class="card">
     <h3>♻️ Garbage Waste Management System (AI)</h3>
-
-    <h4>Project Description</h4>
-    <p>This is an AI-powered application designed to automatically identify and classify different types of garbage. 
-    By using Deep Learning, the system helps in sorting waste quickly, making the recycling process more efficient and eco-friendly.</p>
-
-    <h4>🌟 Key Features</h4>
-    <ul>
-    <li><b>Instant Detection:</b> Uses a trained AI model to identify waste from uploaded photos or live camera captures.</li>
-    <li><b>6-Way Classification:</b> Categorizes waste into Cardboard, Glass, Metal, Paper, Plastic, and Trash.</li>
-    <li><b>Smart Analytics:</b> Visualizes waste data using interactive charts.</li>
-    <li><b>Secure Access:</b> Login system for authorized users.</li>
-    <li><b>Data History:</b> Saves scans and allows CSV download.</li>
-    </ul>
-
-    <h4>🛠️ Technologies Used</h4>
-    <ul>
-    <li>Python</li>
-    <li>Streamlit</li>
-    <li>TensorFlow / Keras</li>
-    <li>OpenCV</li>
-    <li>Plotly</li>
-    </ul>
+    <p>AI-based garbage classification system with real-time detection.</p>
     </div>
     """, unsafe_allow_html=True)
 
-# ---------------- DETECTION (UPLOAD) ----------------
+# ---------------- DETECTION ----------------
 elif page=="Detection (Upload)":
 
     st.title("📤 Upload Detection")
@@ -207,7 +200,10 @@ elif page=="Detection (Upload)":
         if st.button("Detect"):
             label, conf = predict(img)
             st.image(draw(img,label,conf))
-            st.success(label)
+
+            st.success(f"✅ {label.upper()}")
+            st.info(f"Confidence: {conf*100:.2f}%")
+
             st.progress(int(conf*100))
             save(label,conf)
 
@@ -225,7 +221,10 @@ elif page=="Camera":
         if st.button("Detect from Camera"):
             label, conf = predict(img)
             st.image(draw(img,label,conf))
-            st.success(label)
+
+            st.success(f"✅ {label.upper()}")
+            st.info(f"Confidence: {conf*100:.2f}%")
+
             st.progress(int(conf*100))
             save(label,conf)
 
@@ -241,14 +240,6 @@ elif page=="Analytics":
     else:
         st.plotly_chart(px.pie(df,names="Label",title="Waste Distribution"))
         st.plotly_chart(px.bar(df,x="Label",title="Count by Category"))
-        st.plotly_chart(px.histogram(df,x="Confidence",title="Confidence Distribution"))
-        st.plotly_chart(px.line(df,x="Time",y="Confidence",title="Confidence Over Time"))
-        st.plotly_chart(px.box(df,x="Label",y="Confidence",title="Confidence Spread"))
-        st.plotly_chart(px.violin(df,x="Label",y="Confidence",title="Density"))
-        st.plotly_chart(px.scatter(df,x="Confidence",y="Label",title="Scatter Plot"))
-        st.plotly_chart(px.area(df,x="Time",y="Confidence",title="Trend Analysis"))
-        st.plotly_chart(px.strip(df,x="Label",y="Confidence",title="Strip Plot"))
-        st.plotly_chart(px.density_heatmap(df,x="Confidence",y="Label",title="Heatmap"))
 
 # ---------------- HISTORY ----------------
 elif page=="History":
