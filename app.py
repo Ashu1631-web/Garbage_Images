@@ -7,19 +7,41 @@ import os
 from datetime import datetime
 import plotly.express as px
 import plotly.graph_objects as go
+import gdown
 
-st.set_page_config(page_title="♻️ Garbage Waste Management", layout="wide")
-
-# ---------------- MODEL ----------------
-MODEL_PATH = "model.keras"
+MODEL_PATH = "model_fixed.keras"
 
 @st.cache_resource
 def load_model_safe():
     from tensorflow.keras.models import load_model
-    return load_model(MODEL_PATH, compile=False)
+
+    if not os.path.exists(MODEL_PATH):
+        url = "https://drive.google.com/uc?id=1HjQ4XJY6azB3cZ6Mv4HG2mXaVDyJz3GZ"
+        gdown.download(url, MODEL_PATH, quiet=False)
+
+    model = load_model(MODEL_PATH, compile=False)
+    return model
 
 model = load_model_safe()
 
+st.set_page_config(page_title="♻️ Garbage Waste Management", layout="wide")
+
+# ---------------- MODEL ----------------
+MODEL_PATH = "model_fixed.keras"
+
+@st.cache_resource
+def load_model_safe():
+    from tensorflow.keras.models import load_model
+    
+    # अगर model local में नहीं है तो download करो
+    if not os.path.exists(MODEL_PATH):
+        url = "https://drive.google.com/uc?id=1HjQ4XJY6azB3cZ6Mv4HG2mXaVDyJz3GZ"
+        gdown.download(url, MODEL_PATH, quiet=False)
+
+    model = load_model(MODEL_PATH, compile=False)
+    return model
+
+model = load_model_safe()
 # ---------------- LABELS ----------------
 def load_labels():
     try:
