@@ -45,7 +45,7 @@ def set_login_bg():
         }}
 
         .stApp {{
-            background: url("data:image/jpg;base64,{encoded}") no-repeat center center fixed;
+            background: url("https://www.kelvinindia.in/blog/wp-content/uploads/2024/06/Waste-Management.jpg,{encoded}") no-repeat center center fixed;
             background-size: cover;
         }}
 
