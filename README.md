@@ -32,4 +32,12 @@ An AI-powered web application that classifies garbage images into categories suc
 
 ---
 
-## 📁 Project Structure
+📊 Use Cases
+Smart Waste Segregation
+Recycling Automation
+Environmental Monitoring
+Educational Demonstration
+
+
+👨‍💻 Author
+Ashish
