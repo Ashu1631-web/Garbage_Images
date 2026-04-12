@@ -7,7 +7,7 @@ import os
 from datetime import datetime
 import plotly.express as px
 
-st.set_page_config(page_title="♻️ Waste AI", layout="wide")
+st.set_page_config(page_title="♻️ Garbage Waste Management", layout="wide")
 
 # ---------------- MODEL ----------------
 @st.cache_resource
@@ -83,7 +83,7 @@ if "login" not in st.session_state:
 
 def login():
     set_login_bg()
-    st.title("♻️ Waste AI Login")
+    st.title("♻️ Garbage Waste Management Login")
 
     u = st.text_input("Username")
     p = st.text_input("Password", type="password")
@@ -152,7 +152,7 @@ if page=="Overview":
 
     st.markdown("""
     <div class="card">
-    <h3>♻️ Smart Waste Management System (AI)</h3>
+    <h3>♻️ Garbage Waste Management (AI)</h3>
 
     <h4>Project Description</h4>
     <p>This is an AI-powered application designed to automatically identify and classify different types of garbage. 
