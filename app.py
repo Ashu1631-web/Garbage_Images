@@ -6,25 +6,17 @@ from PIL import Image
 import os
 from datetime import datetime
 import plotly.express as px
+import plotly.graph_objects as go
 
 st.set_page_config(page_title="♻️ Garbage Waste Management", layout="wide")
 
-# ---------------- MODEL (FIXED - NO DOWNLOAD) ----------------
+# ---------------- MODEL ----------------
 MODEL_PATH = "model.keras"
 
 @st.cache_resource
 def load_model_safe():
-    try:
-        from tensorflow.keras.models import load_model
-
-        model = load_model(MODEL_PATH, compile=False)
-
-        st.success("✅ Model Loaded Successfully")
-        return model
-
-    except Exception as e:
-        st.error(f"❌ Model Load Error: {e}")
-        return None
+    from tensorflow.keras.models import load_model
+    return load_model(MODEL_PATH, compile=False)
 
 model = load_model_safe()
 
@@ -38,60 +30,12 @@ def load_labels():
 
 labels = load_labels()
 
-# ---------------- LOGIN BG ----------------
-def set_login_bg():
-    st.markdown("""
-    <style>
-    .stApp {
-        background: url("https://www.kelvinindia.in/blog/wp-content/uploads/2024/06/Waste-Management.jpg") no-repeat center center fixed;
-        background-size: cover;
-    }
-    .stApp::before {
-        content:"";
-        position:fixed;
-        width:100%;
-        height:100%;
-        background:rgba(0,0,0,0.7);
-        top:0;
-        left:0;
-        z-index:0;
-    }
-    .block-container {
-        position:relative;
-        z-index:1;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-# ---------------- MAIN UI ----------------
-def set_ui():
-    st.markdown("""
-    <style>
-    .stApp {
-        background: linear-gradient(135deg,#020617,#0f172a);
-        color:white;
-    }
-    [data-testid="stSidebar"] {
-        background: rgba(255,255,255,0.05);
-        backdrop-filter: blur(10px);
-    }
-    .card {
-        background: rgba(255,255,255,0.08);
-        padding:20px;
-        border-radius:12px;
-        margin:10px 0;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
 # ---------------- LOGIN ----------------
 if "login" not in st.session_state:
     st.session_state.login=False
 
 def login():
-    set_login_bg()
     st.title("♻️ Garbage Waste Management")
-
     u = st.text_input("Username")
     p = st.text_input("Password", type="password")
 
@@ -105,42 +49,15 @@ if not st.session_state.login:
     login()
     st.stop()
 
-# ---------------- AFTER LOGIN ----------------
-set_ui()
-
-# ---------------- PREDICTION ----------------
+# ---------------- PREDICT ----------------
 def predict(image):
-    if model is None:
-        return "Model Not Loaded", 0.0
+    img = image.convert("RGB").resize((160,160))
+    img = np.array(img)/255.0
+    img = np.expand_dims(img, axis=0)
 
-    try:
-        img = image.resize((160,160))
-        img = np.array(img) / 255.0
-        img = np.expand_dims(img, axis=0)
-
-        pred = model.predict(img)
-        idx = np.argmax(pred)
-        conf = float(np.max(pred))
-
-        return labels[idx], conf
-
-    except Exception as e:
-        st.error(f"Prediction Error: {e}")
-        return "Prediction Error", 0.0
-
-# ---------------- DRAW ----------------
-def draw(image, label, conf):
-    img = np.array(image)
-    h,w,_ = img.shape
-
-    cv2.rectangle(img,(20,20),(w-20,h-20),(0,255,0),2)
-
-    text = f"{label} ({round(conf*100,2)}%)"
-
-    cv2.putText(img,text,(30,40),
-                cv2.FONT_HERSHEY_SIMPLEX,1,(0,255,0),2)
-
-    return img
+    pred = model.predict(img, verbose=0)
+    idx = np.argmax(pred)
+    return labels[idx], float(np.max(pred)), pred[0]
 
 # ---------------- HISTORY ----------------
 def save(label,conf):
@@ -156,30 +73,23 @@ def save(label,conf):
 
 def load():
     if os.path.exists("history.csv"):
-        return pd.read_csv("history.csv")
+        df = pd.read_csv("history.csv")
+        df["Time"] = pd.to_datetime(df["Time"])
+        return df
     return pd.DataFrame()
 
 # ---------------- SIDEBAR ----------------
 st.sidebar.title("⚙️ Menu")
-
 page = st.sidebar.selectbox("Navigate",
 ["Overview","Detection (Upload)","Camera","Analytics","History"])
 
 # ---------------- OVERVIEW ----------------
 if page=="Overview":
     st.title("🌍 Project Overview")
-
-    st.markdown("""
-    <div class="card">
-    <h3>♻️ Garbage Waste Management System (AI)</h3>
-    <p>AI-based garbage classification system with real-time detection.</p>
-    </div>
-    """, unsafe_allow_html=True)
+    st.info("AI-based garbage classification system")
 
 # ---------------- DETECTION ----------------
 elif page=="Detection (Upload)":
-
-    st.title("📤 Upload Detection")
 
     file = st.file_uploader("Upload Image", type=["jpg","png","jpeg"])
 
@@ -188,53 +98,89 @@ elif page=="Detection (Upload)":
         st.image(img, width=300)
 
         if st.button("Detect"):
-            label, conf = predict(img)
-            st.image(draw(img,label,conf))
+            label, conf, probs = predict(img)
 
-            st.success(f"✅ {label.upper()}")
+            st.success(f"Prediction: {label}")
             st.info(f"Confidence: {conf*100:.2f}%")
-
             st.progress(int(conf*100))
+
+            # 🔥 Probability Breakdown
+            prob_df = pd.DataFrame({
+                "Class": labels,
+                "Probability": probs
+            })
+            st.plotly_chart(px.bar(prob_df, x="Class", y="Probability", title="Class Probabilities"))
+
             save(label,conf)
 
 # ---------------- CAMERA ----------------
 elif page=="Camera":
 
-    st.title("📸 Camera Detection")
-
-    cam = st.camera_input("Capture Image")
+    cam = st.camera_input("Capture")
 
     if cam:
         img = Image.open(cam)
         st.image(img, width=300)
 
-        if st.button("Detect from Camera"):
-            label, conf = predict(img)
-            st.image(draw(img,label,conf))
+        if st.button("Detect"):
+            label, conf, _ = predict(img)
 
-            st.success(f"✅ {label.upper()}")
-            st.info(f"Confidence: {conf*100:.2f}%")
-
+            st.success(label)
+            st.info(f"{conf*100:.2f}%")
             st.progress(int(conf*100))
+
             save(label,conf)
 
-# ---------------- ANALYTICS ----------------
+# ---------------- ANALYTICS (🔥 15+ CHARTS) ----------------
 elif page=="Analytics":
 
-    st.title("📊 Analytics Dashboard")
+    st.title("📊 Advanced Analytics Dashboard")
 
     df = load()
 
     if df.empty:
         st.warning("No data available")
     else:
-        st.plotly_chart(px.pie(df,names="Label",title="Waste Distribution"))
-        st.plotly_chart(px.bar(df,x="Label",title="Count by Category"))
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.plotly_chart(px.pie(df, names="Label", title="1. Waste Distribution"))
+
+        with col2:
+            st.plotly_chart(px.bar(df, x="Label", title="2. Count by Category"))
+
+        st.plotly_chart(px.histogram(df, x="Confidence", title="3. Confidence Distribution"))
+
+        st.plotly_chart(px.box(df, y="Confidence", title="4. Confidence Box Plot"))
+
+        st.plotly_chart(px.line(df, x="Time", y="Confidence", title="5. Confidence Over Time"))
+
+        st.plotly_chart(px.scatter(df, x="Time", y="Confidence", color="Label", title="6. Time vs Confidence"))
+
+        st.plotly_chart(px.area(df, x="Time", y="Confidence", title="7. Area Confidence Trend"))
+
+        st.plotly_chart(px.violin(df, y="Confidence", box=True, title="8. Confidence Spread"))
+
+        st.plotly_chart(px.density_heatmap(df, x="Label", y="Confidence", title="9. Heatmap"))
+
+        st.plotly_chart(px.ecdf(df, x="Confidence", title="10. ECDF Plot"))
+
+        st.plotly_chart(px.strip(df, x="Label", y="Confidence", title="11. Strip Plot"))
+
+        st.plotly_chart(px.funnel(df, x="Confidence", y="Label", title="12. Funnel View"))
+
+        # Aggregations
+        agg = df.groupby("Label")["Confidence"].mean().reset_index()
+
+        st.plotly_chart(px.bar(agg, x="Label", y="Confidence", title="13. Avg Confidence per Class"))
+
+        st.plotly_chart(px.line(agg, x="Label", y="Confidence", title="14. Trend by Class"))
+
+        st.plotly_chart(px.scatter(agg, x="Label", y="Confidence", size="Confidence", title="15. Bubble Chart"))
 
 # ---------------- HISTORY ----------------
 elif page=="History":
-
-    st.title("📂 History")
 
     df = load()
 
