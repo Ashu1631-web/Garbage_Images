@@ -23,15 +23,16 @@ MODEL_PATH = "final_model.h5"
 
 @st.cache_resource
 def load_model_safe():
+    import os, gdown
+    from tensorflow.keras.models import load_model
+
     if not os.path.exists(MODEL_PATH):
-        url = "https://drive.google.com/uc?id=1djM5w_M2sDsZ_MabEVSF3yDsx0SZ1pei"
+        url = "https://drive.google.com/uc?id=18i1huyW7jagQPnVaz06ThtA5tSdy91UY"
         gdown.download(url, MODEL_PATH, quiet=False)
 
-    model = load_model(MODEL_PATH, compile=False)
-    return model
+    return load_model(MODEL_PATH, compile=False)
 
 model = load_model_safe()
-
 # ---------------- LABELS ----------------
 labels = ["cardboard","glass","metal","paper","plastic","trash"]
 
