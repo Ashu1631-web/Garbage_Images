@@ -1,79 +1,75 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
-import cv2
 from PIL import Image
 import os
+import gdown
 from datetime import datetime
 import plotly.express as px
-import plotly.graph_objects as go
-import gdown
+from tensorflow.keras.models import load_model
 
-MODEL_PATH = "model_final.h5"
+st.set_page_config(page_title="♻️ Smart Waste AI", layout="wide")
 
-@st.cache_resource
-def load_model_safe():
-    from tensorflow.keras.models import load_model
-
-    if not os.path.exists(MODEL_PATH):
-        url = "https://drive.google.com/uc?id=127vqr-BxRbbsaGcZ4iMq_fGXK-c3ijSs"
-        gdown.download(url, MODEL_PATH, quiet=False)
-
-    model = load_model(MODEL_PATH, compile=False)
-    return model
-
-model = load_model_safe()
-
-st.set_page_config(page_title="♻️ Garbage Waste Management", layout="wide")
+# ---------------- UI STYLE ----------------
+st.markdown("""
+<style>
+.stApp {
+    background: linear-gradient(135deg,#020617,#0f172a);
+    color:white;
+}
+[data-testid="stSidebar"] {
+    background: rgba(255,255,255,0.05);
+}
+.big-card {
+    background: rgba(255,255,255,0.08);
+    padding:20px;
+    border-radius:15px;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # ---------------- MODEL ----------------
-MODEL_PATH = "model_fixed.keras"
+MODEL_PATH = "model.h5"
 
 @st.cache_resource
 def load_model_safe():
-    from tensorflow.keras.models import load_model
-    
-    # अगर model local में नहीं है तो download करो
     if not os.path.exists(MODEL_PATH):
-        url = "https://drive.google.com/uc?id=1HjQ4XJY6azB3cZ6Mv4HG2mXaVDyJz3GZ"
+        url = "https://drive.google.com/uc?id=PASTE_YOUR_NEW_H5_ID"
         gdown.download(url, MODEL_PATH, quiet=False)
 
     model = load_model(MODEL_PATH, compile=False)
     return model
 
 model = load_model_safe()
-# ---------------- LABELS ----------------
-def load_labels():
-    try:
-        with open("labels.txt") as f:
-            return [i.strip() for i in f.readlines()]
-    except:
-        return ["cardboard","glass","metal","paper","plastic","trash"]
 
-labels = load_labels()
+# ---------------- LABELS ----------------
+labels = ["cardboard","glass","metal","paper","plastic","trash"]
 
 # ---------------- LOGIN ----------------
 if "login" not in st.session_state:
     st.session_state.login=False
 
-def login():
-    st.title("♻️ Garbage Waste Management")
+if not st.session_state.login:
+    st.title("🔐 Login")
     u = st.text_input("Username")
     p = st.text_input("Password", type="password")
 
     if st.button("Login"):
         if u=="admin" and p=="1234":
             st.session_state.login=True
+            st.rerun()
         else:
             st.error("Invalid login")
-
-if not st.session_state.login:
-    login()
     st.stop()
 
-# ---------------- PREDICT ----------------
-def predict(image):
-    img = image.convert("RGB").resize((160,160))
+# ---------------- SIDEBAR ----------------
+st.sidebar.title("⚙️ Dashboard")
+page = st.sidebar.radio("Navigate",
+["Overview","Detection","Analytics","History"])
+
+# ---------------- FUNCTIONS ----------------
+def predict(img):
+    img = img.convert("RGB").resize((160,160))
     img = np.array(img)/255.0
     img = np.expand_dims(img, axis=0)
 
@@ -82,115 +78,84 @@ def predict(image):
 
     return labels[idx], float(np.max(pred)), pred[0]
 
-# ---------------- HISTORY ----------------
-def save(label,conf):
-    df=pd.DataFrame([{
+def save(label, conf):
+    df = pd.DataFrame([{
         "Label":label,
         "Confidence":conf,
         "Time":datetime.now()
     }])
-    if os.path.exists("history.csv"):
-        old=pd.read_csv("history.csv")
-        df=pd.concat([old,df])
-    df.to_csv("history.csv",index=False)
 
-def load():
+    if os.path.exists("history.csv"):
+        old = pd.read_csv("history.csv")
+        df = pd.concat([old,df])
+
+    df.to_csv("history.csv", index=False)
+
+def load_data():
     if os.path.exists("history.csv"):
         df = pd.read_csv("history.csv")
         df["Time"] = pd.to_datetime(df["Time"])
         return df
     return pd.DataFrame()
 
-# ---------------- SIDEBAR ----------------
-st.sidebar.title("⚙️ Menu")
-page = st.sidebar.selectbox("Navigate",
-["Overview","Detection (Upload)","Camera","Analytics","History"])
-
 # ---------------- OVERVIEW ----------------
-if page=="Overview":
-    st.title("🌍 Project Overview")
-    st.info("AI-based garbage classification system")
+if page == "Overview":
+    st.title("♻️ Smart Waste Management AI")
+
+    col1,col2,col3 = st.columns(3)
+
+    col1.metric("Accuracy","~87%")
+    col2.metric("Model Type","MobileNetV2")
+    col3.metric("Status","Active")
 
 # ---------------- DETECTION ----------------
-elif page=="Detection (Upload)":
+elif page == "Detection":
+    st.title("📤 Upload Waste Image")
 
-    file = st.file_uploader("Upload Image", type=["jpg","png","jpeg"])
+    file = st.file_uploader("Upload Image")
 
     if file:
         img = Image.open(file)
         st.image(img, width=300)
 
-        if st.button("Detect"):
+        if st.button("Analyze"):
             label, conf, probs = predict(img)
 
-            st.success(f"Prediction: {label}")
-            st.info(f"Confidence: {conf*100:.2f}%")
+            st.success(f"Detected: {label}")
             st.progress(int(conf*100))
 
-            # Probability chart
-            prob_df = pd.DataFrame({
+            st.metric("Confidence", f"{conf*100:.2f}%")
+
+            df = pd.DataFrame({
                 "Class": labels,
                 "Probability": probs
             })
-            st.plotly_chart(px.bar(prob_df, x="Class", y="Probability", title="Class Probabilities"))
 
-            save(label,conf)
-
-# ---------------- CAMERA ----------------
-elif page=="Camera":
-
-    cam = st.camera_input("Capture")
-
-    if cam:
-        img = Image.open(cam)
-        st.image(img, width=300)
-
-        if st.button("Detect"):
-            label, conf, _ = predict(img)
-
-            st.success(label)
-            st.info(f"{conf*100:.2f}%")
-            st.progress(int(conf*100))
+            st.plotly_chart(px.bar(df, x="Class", y="Probability"))
 
             save(label,conf)
 
 # ---------------- ANALYTICS ----------------
-elif page=="Analytics":
+elif page == "Analytics":
+    st.title("📊 Analytics Dashboard")
 
-    st.title("📊 Advanced Analytics Dashboard")
-
-    df = load()
+    df = load_data()
 
     if df.empty:
-        st.warning("No data available")
+        st.warning("No data yet")
     else:
-
-        st.plotly_chart(px.pie(df, names="Label", title="1. Waste Distribution"))
-        st.plotly_chart(px.bar(df, x="Label", title="2. Count by Category"))
-        st.plotly_chart(px.histogram(df, x="Confidence", title="3. Confidence Distribution"))
-        st.plotly_chart(px.box(df, y="Confidence", title="4. Confidence Box"))
-        st.plotly_chart(px.line(df, x="Time", y="Confidence", title="5. Confidence Over Time"))
-        st.plotly_chart(px.scatter(df, x="Time", y="Confidence", color="Label", title="6. Scatter"))
-        st.plotly_chart(px.area(df, x="Time", y="Confidence", title="7. Area"))
-        st.plotly_chart(px.violin(df, y="Confidence", box=True, title="8. Violin"))
-        st.plotly_chart(px.density_heatmap(df, x="Label", y="Confidence", title="9. Heatmap"))
-        st.plotly_chart(px.ecdf(df, x="Confidence", title="10. ECDF"))
-        st.plotly_chart(px.strip(df, x="Label", y="Confidence", title="11. Strip"))
-        st.plotly_chart(px.funnel(df, x="Confidence", y="Label", title="12. Funnel"))
-
-        agg = df.groupby("Label")["Confidence"].mean().reset_index()
-
-        st.plotly_chart(px.bar(agg, x="Label", y="Confidence", title="13. Avg Confidence"))
-        st.plotly_chart(px.line(agg, x="Label", y="Confidence", title="14. Trend"))
-        st.plotly_chart(px.scatter(agg, x="Label", y="Confidence", size="Confidence", title="15. Bubble"))
+        st.plotly_chart(px.pie(df, names="Label"))
+        st.plotly_chart(px.histogram(df, x="Confidence"))
+        st.plotly_chart(px.line(df, x="Time", y="Confidence"))
 
 # ---------------- HISTORY ----------------
-elif page=="History":
+elif page == "History":
+    st.title("📂 Prediction History")
 
-    df = load()
+    df = load_data()
 
     if df.empty:
         st.warning("No history")
     else:
         st.dataframe(df)
-        st.download_button("Download CSV", df.to_csv(index=False), "history.csv")
+        st.download_button("Download CSV", df.to_csv(index=False))
