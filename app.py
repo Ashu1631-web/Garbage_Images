@@ -19,12 +19,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ---------------- MODEL ----------------
-MODEL_PATH = "model_clean.h5"
+MODEL_PATH = "final_model.h5"
 
 @st.cache_resource
 def load_model_safe():
     if not os.path.exists(MODEL_PATH):
-        url = "https://drive.google.com/uc?id=1L0DtqxyujtuqDuhFBg0Ivwev79SqeAO_"
+        url = "https://drive.google.com/uc?id=1djM5w_M2sDsZ_MabEVSF3yDsx0SZ1pei"
         gdown.download(url, MODEL_PATH, quiet=False)
 
     model = load_model(MODEL_PATH, compile=False)
