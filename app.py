@@ -10,31 +10,21 @@ from tensorflow.keras.models import load_model
 
 st.set_page_config(page_title="♻️ Smart Waste AI", layout="wide")
 
-# ---------------- UI STYLE ----------------
+# ---------------- STYLE ----------------
 st.markdown("""
 <style>
-.stApp {
-    background: linear-gradient(135deg,#020617,#0f172a);
-    color:white;
-}
-[data-testid="stSidebar"] {
-    background: rgba(255,255,255,0.05);
-}
-.big-card {
-    background: rgba(255,255,255,0.08);
-    padding:20px;
-    border-radius:15px;
-}
+.stApp {background: linear-gradient(135deg,#020617,#0f172a); color:white;}
+[data-testid="stSidebar"] {background: rgba(255,255,255,0.05);}
 </style>
 """, unsafe_allow_html=True)
 
 # ---------------- MODEL ----------------
-MODEL_PATH = "model.h5"
+MODEL_PATH = "model_clean.h5"
 
 @st.cache_resource
 def load_model_safe():
     if not os.path.exists(MODEL_PATH):
-        url = "https://drive.google.com/uc?id=PASTE_YOUR_NEW_H5_ID"
+        url = "https://drive.google.com/uc?id=1L0DtqxyujtuqDuhFBg0Ivwev79SqeAO_"
         gdown.download(url, MODEL_PATH, quiet=False)
 
     model = load_model(MODEL_PATH, compile=False)
@@ -103,9 +93,8 @@ if page == "Overview":
     st.title("♻️ Smart Waste Management AI")
 
     col1,col2,col3 = st.columns(3)
-
     col1.metric("Accuracy","~87%")
-    col2.metric("Model Type","MobileNetV2")
+    col2.metric("Model","MobileNetV2")
     col3.metric("Status","Active")
 
 # ---------------- DETECTION ----------------
@@ -122,15 +111,13 @@ elif page == "Detection":
             label, conf, probs = predict(img)
 
             st.success(f"Detected: {label}")
-            st.progress(int(conf*100))
-
             st.metric("Confidence", f"{conf*100:.2f}%")
+            st.progress(int(conf*100))
 
             df = pd.DataFrame({
                 "Class": labels,
                 "Probability": probs
             })
-
             st.plotly_chart(px.bar(df, x="Class", y="Probability"))
 
             save(label,conf)
