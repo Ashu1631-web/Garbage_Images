@@ -1,7 +1,8 @@
-streamlit
-numpy
-pandas
-pillow
-tensorflow
-plotly
-opencv-python-headless
+streamlit==1.32.0
+numpy==1.23.5
+pandas==1.5.3
+pillow==9.5.0
+plotly==5.18.0
+opencv-python-headless==4.9.0.80
+tensorflow-cpu==2.12.0
+h5py==3.8.0
