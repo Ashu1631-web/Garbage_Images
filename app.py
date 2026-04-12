@@ -6,26 +6,16 @@ from PIL import Image
 import os
 from datetime import datetime
 import plotly.express as px
-import gdown  # ✅ NEW
 
 st.set_page_config(page_title="♻️ Garbage Waste Management", layout="wide")
 
-# ---------------- MODEL DOWNLOAD (NEW) ----------------
-MODEL_PATH = "model_fixed.h5"
+# ---------------- MODEL (FIXED - NO DOWNLOAD) ----------------
+MODEL_PATH = "model.keras"
 
-def download_model():
-    if not os.path.exists(MODEL_PATH):
-        with st.spinner("⬇️ Downloading AI Model..."):
-            url = "PASTE_YOUR_GOOGLE_DRIVE_LINK_HERE"  # 🔥 Replace this
-            gdown.download(url, MODEL_PATH, quiet=False)
-
-download_model()
-
-# ---------------- MODEL (FIXED) ----------------
 @st.cache_resource
 def load_model_safe():
     try:
-        from keras.models import load_model
+        from tensorflow.keras.models import load_model
 
         model = load_model(MODEL_PATH, compile=False)
 
@@ -124,7 +114,7 @@ def predict(image):
         return "Model Not Loaded", 0.0
 
     try:
-        img = image.resize((160,160))  # ✅ FIXED SIZE
+        img = image.resize((160,160))
         img = np.array(img) / 255.0
         img = np.expand_dims(img, axis=0)
 
