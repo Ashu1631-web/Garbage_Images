@@ -5,61 +5,16 @@ import cv2
 from PIL import Image
 from tensorflow.keras.models import load_model
 from datetime import datetime
-import plotly.express as px
+import base64
 import os
+import plotly.express as px
 
 # ---------------- CONFIG ----------------
 st.set_page_config(
-    page_title="♻️ RecycleVision AI",
+    page_title="♻️ Recycle & Waste Management",
     layout="wide",
     page_icon="🌱"
 )
-
-# ---------------- GLASS UI ----------------
-st.markdown("""
-<style>
-body {
-    background: linear-gradient(135deg,#0f172a,#020617);
-    color:white;
-}
-[data-testid="stSidebar"] {
-    background: rgba(255,255,255,0.05);
-    backdrop-filter: blur(10px);
-}
-.glass {
-    background: rgba(255,255,255,0.08);
-    padding:20px;
-    border-radius:15px;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 4px 30px rgba(0,0,0,0.3);
-}
-.stButton>button {
-    background: linear-gradient(90deg,#00c6ff,#0072ff);
-    border:none;
-    border-radius:10px;
-    color:white;
-}
-</style>
-""", unsafe_allow_html=True)
-
-# ---------------- LOGIN ----------------
-if "login" not in st.session_state:
-    st.session_state.login = False
-
-def login():
-    st.title("🔐 Login")
-    user = st.text_input("Username")
-    pwd = st.text_input("Password", type="password")
-
-    if st.button("Login"):
-        if user == "admin" and pwd == "1234":
-            st.session_state.login = True
-        else:
-            st.error("Invalid Credentials")
-
-if not st.session_state.login:
-    login()
-    st.stop()
 
 # ---------------- LOAD MODEL ----------------
 @st.cache_resource
@@ -74,6 +29,76 @@ def load_labels():
         return [i.strip() for i in f.readlines()]
 
 labels = load_labels()
+
+# ---------------- BACKGROUND IMAGE (LOGIN ONLY) ----------------
+def set_bg(image_file):
+    with open(image_file, "rb") as f:
+        data = base64.b64encode(f.read()).decode()
+
+    st.markdown(f"""
+    <style>
+    .stApp {{
+        background-image: url("data:image/jpg;base64,{data}");
+        background-size: cover;
+        background-position: center;
+    }}
+    </style>
+    """, unsafe_allow_html=True)
+
+# ---------------- GRADIENT UI ----------------
+def set_gradient():
+    st.markdown("""
+    <style>
+    .stApp {
+        background: linear-gradient(135deg,#020617,#0f172a);
+        color:white;
+    }
+    [data-testid="stSidebar"] {
+        background: rgba(255,255,255,0.05);
+        backdrop-filter: blur(12px);
+    }
+    .glass {
+        background: rgba(255,255,255,0.08);
+        padding:20px;
+        border-radius:15px;
+        backdrop-filter: blur(10px);
+    }
+    .stButton>button {
+        background: linear-gradient(90deg,#00c6ff,#0072ff);
+        color:white;
+        border-radius:10px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# ---------------- LOGIN ----------------
+if "login" not in st.session_state:
+    st.session_state.login = False
+
+def login():
+    set_bg("garbage_bg.jpg")   # 👈 only login page image
+
+    st.markdown("<h1 style='text-align:center;color:white;'>♻️ RecycleVision AI</h1>", unsafe_allow_html=True)
+
+    st.markdown("<div style='text-align:center;color:white;'>Smart Waste Classification</div>", unsafe_allow_html=True)
+
+    st.markdown("## 🔐 Login")
+
+    user = st.text_input("Username")
+    pwd = st.text_input("Password", type="password")
+
+    if st.button("Login"):
+        if user == "admin" and pwd == "1234":
+            st.session_state.login = True
+        else:
+            st.error("Invalid Credentials")
+
+if not st.session_state.login:
+    login()
+    st.stop()
+
+# ---------------- AFTER LOGIN APPLY GRADIENT ----------------
+set_gradient()
 
 # ---------------- PREDICTION ----------------
 def predict_image(image):
@@ -92,7 +117,6 @@ def draw_box(image, label, conf):
     img = np.array(image)
     h, w, _ = img.shape
 
-    # fake full box (since classification model)
     start = (20, 20)
     end = (w-20, h-20)
 
@@ -126,22 +150,27 @@ def load_history():
 
 # ---------------- SIDEBAR ----------------
 st.sidebar.title("⚙️ Input Mode")
-mode = st.sidebar.radio("", ["Upload Image","Camera Capture"])
 
-page = st.sidebar.selectbox("Navigate",
-                           ["Home","Detection","Analytics","History"])
+mode = st.sidebar.radio(
+    "Choose input mode:",
+    ["Upload Image", "Camera Capture"]
+)
+
+page = st.sidebar.selectbox(
+    "Navigate",
+    ["Home", "Detection", "Analytics", "History"]
+)
 
 # ---------------- HOME ----------------
 if page == "Home":
     st.markdown("<h1 style='color:#22c55e;'>🌿 RecycleVision AI</h1>", unsafe_allow_html=True)
-    st.write("Smart Waste Classification using Deep Learning")
 
-    c1,c2,c3 = st.columns(3)
-    c1.metric("Predictions","1250")
-    c2.metric("Accuracy","94%")
-    c3.metric("Users","350")
+    col1,col2,col3 = st.columns(3)
+    col1.metric("Predictions","1250")
+    col2.metric("Accuracy","94%")
+    col3.metric("Users","350")
 
-    st.markdown('<div class="glass">AI system for smart recycling & waste management</div>', unsafe_allow_html=True)
+    st.markdown('<div class="glass">AI-powered waste classification system</div>', unsafe_allow_html=True)
 
 # ---------------- DETECTION ----------------
 elif page == "Detection":
@@ -161,7 +190,7 @@ elif page == "Detection":
             image = Image.open(cam)
 
     if image:
-        st.image(image, caption="Input Image", width=300)
+        st.image(image, width=300)
 
         if st.button("🔍 Detect Waste"):
             label, conf = predict_image(image)
@@ -178,18 +207,15 @@ elif page == "Detection":
 # ---------------- ANALYTICS ----------------
 elif page == "Analytics":
 
-    st.title("📊 Power BI Style Dashboard")
+    st.title("📊 Analytics Dashboard")
 
     df = load_history()
 
     if df.empty:
-        st.warning("No data available")
+        st.warning("No Data Available")
     else:
-        col1,col2 = st.columns(2)
-
-        col1.plotly_chart(px.pie(df, names="Label"))
-        col2.plotly_chart(px.bar(df, x="Label"))
-
+        st.plotly_chart(px.pie(df, names="Label"))
+        st.plotly_chart(px.bar(df, x="Label"))
         st.plotly_chart(px.line(df, x="Time", y="Confidence"))
         st.plotly_chart(px.histogram(df, x="Confidence"))
         st.plotly_chart(px.box(df, x="Label", y="Confidence"))
