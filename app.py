@@ -8,7 +8,7 @@ import os
 from datetime import datetime
 import plotly.express as px
 
-st.set_page_config(page_title="♻️ Waste AI", layout="wide")
+st.set_page_config(page_title="♻️ Garbage Waste Management", layout="wide")
 
 # ---------------- MODEL ----------------
 @st.cache_resource
@@ -91,7 +91,7 @@ def login():
     p = st.text_input("Password", type="password")
 
     if st.button("Login"):
-        if u == "admin" and p == "1234":
+        if u == "ashu" and p == "1234":
             st.session_state.login = True
         else:
             st.error("Invalid login")
