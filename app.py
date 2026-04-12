@@ -9,14 +9,14 @@ import plotly.express as px
 import plotly.graph_objects as go
 import gdown
 
-MODEL_PATH = "model_fixed.keras"
+MODEL_PATH = "model_final.h5"
 
 @st.cache_resource
 def load_model_safe():
     from tensorflow.keras.models import load_model
 
     if not os.path.exists(MODEL_PATH):
-        url = "https://drive.google.com/uc?id=1HjQ4XJY6azB3cZ6Mv4HG2mXaVDyJz3GZ"
+        url = "https://drive.google.com/uc?id=127vqr-BxRbbsaGcZ4iMq_fGXK-c3ijSs"
         gdown.download(url, MODEL_PATH, quiet=False)
 
     model = load_model(MODEL_PATH, compile=False)
