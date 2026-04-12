@@ -85,7 +85,7 @@ if "login" not in st.session_state:
 
 def login():
     set_login_bg()  # ✅ ONLY login page bg
-    st.title("♻️ Waste AI Login")
+    st.title("♻️ Garbage Waste Management Login")
 
     u = st.text_input("Username")
     p = st.text_input("Password", type="password")
@@ -159,7 +159,7 @@ if page == "Overview":
 
     st.markdown("""
     <div class="card">
-    <h3>♻️ Waste Classification AI</h3>
+    <h3>♻️ Garbage Waste Management</h3>
     <p>This AI model classifies waste into 6 categories using deep learning.</p>
     </div>
     """, unsafe_allow_html=True)
