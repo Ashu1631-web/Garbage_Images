@@ -15,7 +15,7 @@ def load_model_safe():
     try:
         from keras.models import load_model  # 🔥 IMPORTANT CHANGE
 
-        model = load_model("model.h5", compile=False)
+        model = load_model("model_fixed.h5", compile=False)
 
         st.success("✅ Model Loaded Successfully")
         return model
