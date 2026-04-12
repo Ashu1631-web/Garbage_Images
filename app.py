@@ -9,14 +9,17 @@ import plotly.express as px
 
 st.set_page_config(page_title="♻️ Garbage Waste Management", layout="wide")
 
-# ---------------- MODEL (FIXED) ----------------
+# ---------------- MODEL (FIXED FOR KERAS 3) ----------------
 @st.cache_resource
 def load_model_safe():
     try:
-        from tensorflow.keras.models import load_model
+        from keras.models import load_model  # 🔥 IMPORTANT CHANGE
+
         model = load_model("model.h5", compile=False)
+
         st.success("✅ Model Loaded Successfully")
         return model
+
     except Exception as e:
         st.error(f"❌ Model Load Error: {e}")
         return None
@@ -90,7 +93,7 @@ def login():
     p = st.text_input("Password", type="password")
 
     if st.button("Login"):
-        if u=="ashu" and p=="1234":
+        if u=="admin" and p=="1234":
             st.session_state.login=True
         else:
             st.error("Invalid login")
@@ -128,7 +131,6 @@ def draw(image, label, conf):
 
     cv2.rectangle(img,(20,20),(w-20,h-20),(0,255,0),2)
 
-    # FIXED TEXT (NO ERROR 0%)
     text = f"{label} ({round(conf*100,2)}%)" if conf > 0 else "No Prediction"
 
     cv2.putText(img,text,(30,40),
