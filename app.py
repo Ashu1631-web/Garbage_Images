@@ -9,13 +9,16 @@ import plotly.express as px
 
 st.set_page_config(page_title="♻️ Garbage Waste Management", layout="wide")
 
-# ---------------- MODEL ----------------
+# ---------------- MODEL (FIXED) ----------------
 @st.cache_resource
 def load_model_safe():
     try:
         from tensorflow.keras.models import load_model
-        return load_model("model.h5", compile=False)
-    except:
+        model = load_model("model.h5", compile=False)
+        st.success("✅ Model Loaded Successfully")
+        return model
+    except Exception as e:
+        st.error(f"❌ Model Load Error: {e}")
         return None
 
 model = load_model_safe()
@@ -37,7 +40,6 @@ def set_login_bg():
         background: url("https://www.kelvinindia.in/blog/wp-content/uploads/2024/06/Waste-Management.jpg") no-repeat center center fixed;
         background-size: cover;
     }
-
     .stApp::before {
         content:"";
         position:fixed;
@@ -48,7 +50,6 @@ def set_login_bg():
         left:0;
         z-index:0;
     }
-
     .block-container {
         position:relative;
         z-index:1;
@@ -101,26 +102,38 @@ if not st.session_state.login:
 # ---------------- AFTER LOGIN ----------------
 set_ui()
 
-# ---------------- PREDICT ----------------
+# ---------------- PREDICTION (FIXED) ----------------
 def predict(image):
     if model is None:
-        return "Error",0
+        return "Model Not Loaded", 0.0
 
-    img=image.resize((160,160))
-    img=np.array(img)/255.0
-    img=np.expand_dims(img,0)
+    try:
+        img = image.resize((160,160))
+        img = np.array(img) / 255.0
+        img = np.expand_dims(img, axis=0)
 
-    pred=model.predict(img)
-    idx=np.argmax(pred)
-    conf=float(np.max(pred))
-    return labels[idx],conf
+        pred = model.predict(img)
+        idx = np.argmax(pred)
+        conf = float(np.max(pred))
 
-def draw(image,label,conf):
-    img=np.array(image)
-    h,w,_=img.shape
+        return labels[idx], conf
+
+    except Exception as e:
+        st.error(f"Prediction Error: {e}")
+        return "Prediction Error", 0.0
+
+def draw(image, label, conf):
+    img = np.array(image)
+    h,w,_ = img.shape
+
     cv2.rectangle(img,(20,20),(w-20,h-20),(0,255,0),2)
-    cv2.putText(img,f"{label} {round(conf*100,2)}%",
-                (30,40),cv2.FONT_HERSHEY_SIMPLEX,1,(0,255,0),2)
+
+    # FIXED TEXT (NO ERROR 0%)
+    text = f"{label} ({round(conf*100,2)}%)" if conf > 0 else "No Prediction"
+
+    cv2.putText(img,text,(30,40),
+                cv2.FONT_HERSHEY_SIMPLEX,1,(0,255,0),2)
+
     return img
 
 # ---------------- HISTORY ----------------
@@ -152,7 +165,7 @@ if page=="Overview":
 
     st.markdown("""
     <div class="card">
-    <h3>♻️ Garbage Waste Management (AI)</h3>
+    <h3>♻️ Garbage Waste Management System (AI)</h3>
 
     <h4>Project Description</h4>
     <p>This is an AI-powered application designed to automatically identify and classify different types of garbage. 
