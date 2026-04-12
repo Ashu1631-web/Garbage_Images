@@ -89,7 +89,7 @@ def login():
     p = st.text_input("Password", type="password")
 
     if st.button("Login"):
-        if u=="admin" and p=="1234":
+        if u=="ashu" and p=="1234":
             st.session_state.login=True
         else:
             st.error("Invalid login")
