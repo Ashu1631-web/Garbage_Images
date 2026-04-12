@@ -1,7 +1,10 @@
-from flask import Flask, render_template, request, jsonify
+import streamlit as st
+import numpy as np
+import pandas as pd
+from PIL import Image
 import os
-from utils import preprocess_image, predict_waste_category
-
+import gdown
+import tensorflow as tf
 app = Flask(__name__)
 
 # Configure upload folder
