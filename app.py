@@ -132,7 +132,7 @@ if page == "Project Overview":
     <ul>
     <li>Image-based waste detection</li>
     <li>Camera live detection</li>
-    <li>5-category classification</li>
+    <li>Multi-category classification</li>
     <li>Analytics dashboard</li>
     <li>History tracking + CSV export</li>
     </ul>
@@ -161,9 +161,14 @@ elif page == "Detection (Upload)":
 
         if st.button("Detect"):
             label, conf = predict(img)
-            st.success(label)
+
             st.success(f"Prediction: {label}")
+
+            # ✅ Confidence clearly shown
+            st.markdown(f"### Confidence: **{round(conf*100,2)}%**")
+
             st.progress(int(conf*100))
+
             save(label, conf)
 
 # ---------------- CAMERA ----------------
@@ -179,29 +184,50 @@ elif page == "Camera":
 
         if st.button("Detect from Camera"):
             label, conf = predict(img)
-            st.success(label)
+
+            st.success(f"Prediction: {label}")
+
+            # ✅ Confidence clearly shown
+            st.markdown(f"### Confidence: **{round(conf*100,2)}%**")
+
             st.progress(int(conf*100))
+
             save(label, conf)
 
 # ---------------- ANALYTICS ----------------
 elif page == "Analytics":
 
-    st.title("📊 Analytics")
+    st.title("📊 Analytics Dashboard")
 
     df = load()
 
     if df.empty:
         st.warning("No Data")
     else:
-        st.plotly_chart(px.pie(df, names="Label"))
-        st.plotly_chart(px.bar(df, x="Label"))
-        st.plotly_chart(px.histogram(df, x="Confidence"))
-        st.plotly_chart(px.line(df, x="Time", y="Confidence"))
+        st.plotly_chart(px.pie(df, names="Label", title="Waste Distribution by Category"))
+
+        st.plotly_chart(px.bar(df, x="Label", title="Total Waste Count by Category"))
+
+        st.plotly_chart(px.histogram(df, x="Confidence", title="Confidence Score Distribution"))
+
+        st.plotly_chart(px.line(df, x="Time", y="Confidence", title="Confidence Trend Over Time"))
+
+        st.plotly_chart(px.scatter(df, x="Confidence", y="Label", title="Confidence vs Category"))
+
+        st.plotly_chart(px.box(df, x="Label", y="Confidence", title="Confidence Spread per Category"))
+
+        st.plotly_chart(px.violin(df, x="Label", y="Confidence", title="Confidence Density Distribution"))
+
+        st.plotly_chart(px.area(df, x="Time", y="Confidence", title="Confidence Area Trend"))
+
+        st.plotly_chart(px.density_heatmap(df, x="Confidence", y="Label", title="Confidence Heatmap"))
+
+        st.plotly_chart(px.strip(df, x="Label", y="Confidence", title="Confidence Strip Plot"))
 
 # ---------------- HISTORY ----------------
 elif page == "History":
 
-    st.title("📂 History")
+    st.title("📂 Prediction History")
 
     df = load()
 
@@ -209,4 +235,6 @@ elif page == "History":
         st.warning("No history")
     else:
         st.dataframe(df)
-        st.download_button("Download CSV", df.to_csv(index=False), "history.csv")
+
+        csv = df.to_csv(index=False).encode()
+        st.download_button("⬇ Download CSV", csv, "history.csv")
