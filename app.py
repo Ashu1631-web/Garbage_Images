@@ -5,7 +5,6 @@ from PIL import Image
 from datetime import datetime
 import plotly.express as px
 import tensorflow as tf
-from tensorflow.keras.models import load_model
 import json
 import gdown
 import os
@@ -17,9 +16,7 @@ st.set_page_config(
     page_icon="🌱"
 )
 
-# ---------------- LOAD MODEL (NO UI BLOCK) ----------------
-import tensorflow as tf
-
+# ---------------- LOAD MODEL ----------------
 @st.cache_resource
 def load_my_model():
     model_path = "final_garbage_model.keras"
@@ -27,7 +24,7 @@ def load_my_model():
     try:
         if not os.path.exists(model_path):
             url = "https://drive.google.com/uc?id=1YsShxgnuv29JCmkvMNx4Gq7wu4qxg3X7"
-            gdown.download(url, model_path, quiet=False)
+            gdown.download(url, model_path, quiet=True)
 
         model = tf.keras.models.load_model(model_path, compile=False)
         return model
@@ -35,6 +32,9 @@ def load_my_model():
     except Exception as e:
         st.error(f"Model load failed: {e}")
         return None
+
+
+model = load_my_model()
 
 # ---------------- LOAD LABELS ----------------
 @st.cache_resource
@@ -51,21 +51,26 @@ def load_classes():
 
 labels = load_classes()
 
-# ---------------- SAFE PREDICT ----------------
+# ---------------- PREDICT FUNCTION ----------------
 def predict(img):
     if model is None:
-        return [("Model Error", 0.0)], np.zeros(len(labels))
+        return "Model Error", 0.0, []
 
-    img = img.resize((160, 160))
-    img_array = np.array(img) / 255.0
-    img_array = np.expand_dims(img_array, axis=0)
+    try:
+        img = img.resize((160, 160))
+        img_array = np.array(img) / 255.0
+        img_array = np.expand_dims(img_array, axis=0)
 
-    preds = model.predict(img_array)[0]
+        preds = model.predict(img_array)[0]
 
-    top3_idx = preds.argsort()[-3:][::-1]
-    top3 = [(labels[i], float(preds[i])) for i in top3_idx]
+        top3_idx = preds.argsort()[-3:][::-1]
+        top3 = [(labels[i], float(preds[i])) for i in top3_idx]
 
-    return top3, preds
+        return top3[0][0], top3[0][1], top3
+
+    except Exception as e:
+        st.error(f"Prediction error: {e}")
+        return "Error", 0.0, []
 
 # ---------------- LOGIN BG ----------------
 def login_bg():
@@ -134,7 +139,11 @@ main_ui()
 
 # ---------------- SIDEBAR ----------------
 st.sidebar.title("⚙️ Menu")
-st.sidebar.success("Model Ready ✅" if model else "Model Error ❌")
+
+if model is not None:
+    st.sidebar.success("Model Ready ✅")
+else:
+    st.sidebar.error("Model Error ❌")
 
 page = st.sidebar.selectbox(
     "Navigate",
@@ -166,6 +175,7 @@ def load():
 
 # ---------------- PROJECT OVERVIEW ----------------
 if page == "Project Overview":
+
     st.title("🌍 Project Overview")
 
     st.markdown("""
@@ -196,25 +206,27 @@ elif page == "Detection (Upload)":
 
         if st.button("Detect"):
 
-            top3, preds = predict(img)
-            label, conf = top3[0]
+            label, conf, top3 = predict(img)
 
-            st.success(f"♻️ {label.upper()}")
-            st.markdown(f"### Confidence: **{round(conf*100,2)}%**")
-            st.progress(int(conf*100))
+            if label == "Model Error":
+                st.error("🚫 Model not loaded")
+            else:
+                st.success(f"♻️ {label.upper()}")
+                st.markdown(f"### Confidence: **{round(conf*100,2)}%**")
+                st.progress(int(conf*100))
 
-            st.markdown("### 🔥 Top 3 Predictions")
-            for l, c in top3:
-                st.write(f"{l} → {round(c*100,2)}%")
+                st.markdown("### 🔥 Top 3 Predictions")
+                for l, c in top3:
+                    st.write(f"{l} → {round(c*100,2)}%")
 
-            df_chart = pd.DataFrame({
-                "Category": labels,
-                "Confidence": preds
-            })
+                df_chart = pd.DataFrame({
+                    "Category": labels,
+                    "Confidence": [c for _, c in top3] + [0]*(len(labels)-len(top3))
+                })
 
-            st.plotly_chart(px.bar(df_chart, x="Category", y="Confidence"))
+                st.plotly_chart(px.bar(df_chart, x="Category", y="Confidence"))
 
-            save(label, conf)
+                save(label, conf)
 
 # ---------------- CAMERA ----------------
 elif page == "Camera":
@@ -229,25 +241,20 @@ elif page == "Camera":
 
         if st.button("Detect from Camera"):
 
-            top3, preds = predict(img)
-            label, conf = top3[0]
+            label, conf, top3 = predict(img)
 
-            st.success(f"♻️ {label.upper()}")
-            st.markdown(f"### Confidence: **{round(conf*100,2)}%**")
-            st.progress(int(conf*100))
+            if label == "Model Error":
+                st.error("🚫 Model not loaded")
+            else:
+                st.success(f"♻️ {label.upper()}")
+                st.markdown(f"### Confidence: **{round(conf*100,2)}%**")
+                st.progress(int(conf*100))
 
-            st.markdown("### 🔥 Top 3 Predictions")
-            for l, c in top3:
-                st.write(f"{l} → {round(c*100,2)}%")
+                st.markdown("### 🔥 Top 3 Predictions")
+                for l, c in top3:
+                    st.write(f"{l} → {round(c*100,2)}%")
 
-            df_chart = pd.DataFrame({
-                "Category": labels,
-                "Confidence": preds
-            })
-
-            st.plotly_chart(px.bar(df_chart, x="Category", y="Confidence"))
-
-            save(label, conf)
+                save(label, conf)
 
 # ---------------- ANALYTICS ----------------
 elif page == "Analytics":
