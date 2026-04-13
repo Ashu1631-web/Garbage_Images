@@ -4,13 +4,41 @@ import numpy as np
 from PIL import Image
 from datetime import datetime
 import plotly.express as px
+from tensorflow.keras.models import load_model
 
 # ---------------- CONFIG ----------------
 st.set_page_config(
-    page_title="♻️ Waste Classification App",
+    page_title="♻️ Waste Garbage Management",
     layout="wide",
     page_icon="🌱"
 )
+
+# ---------------- LOAD MODEL ----------------
+@st.cache_resource
+def load_my_model():
+    return load_model("final_garbage_model.keras")
+
+model = load_my_model()
+
+# ---------------- CLASS LABELS ----------------
+labels = [
+    'battery', 'biological', 'brown-glass', 'cardboard',
+    'clothes', 'green-glass', 'metal', 'paper',
+    'plastic', 'shoes', 'trash', 'white-glass'
+]
+
+# ---------------- PREDICT FUNCTION ----------------
+def predict(img):
+    img = img.resize((160, 160))
+    img_array = np.array(img) / 255.0
+    img_array = np.expand_dims(img_array, axis=0)
+
+    prediction = model.predict(img_array)
+
+    label = labels[np.argmax(prediction)]
+    confidence = float(np.max(prediction))
+
+    return label, confidence
 
 # ---------------- LOGIN BG ----------------
 def login_bg():
@@ -60,7 +88,7 @@ if "login" not in st.session_state:
 
 def login():
     login_bg()
-    st.title("♻️ Waste AI Login")
+    st.title("♻️ Waste Garbage Management Login")
     user = st.text_input("Username")
     pwd = st.text_input("Password", type="password")
 
@@ -84,14 +112,6 @@ page = st.sidebar.selectbox(
     "Navigate",
     ["Project Overview","Detection (Upload)","Camera","Analytics","History"]
 )
-
-# ---------------- FAKE MODEL ----------------
-labels = ["Organic", "Plastic", "Metal", "Glass", "Paper"]
-
-def predict(img):
-    label = np.random.choice(labels)
-    confidence = round(np.random.uniform(0.75, 0.98), 2)
-    return label, confidence
 
 # ---------------- SAVE ----------------
 def save(label, conf):
@@ -123,28 +143,8 @@ if page == "Project Overview":
 
     st.markdown("""
     <div class="card">
-    <h3>♻️ Smart Waste Management System (AI)</h3>
-
-    <p>This AI-powered system automatically classifies garbage into different categories using Deep Learning. 
-    It helps improve waste sorting efficiency and supports eco-friendly recycling.</p>
-
-    <h4>🌟 Key Features</h4>
-    <ul>
-    <li>Image-based waste detection</li>
-    <li>Camera live detection</li>
-    <li>Multi-category classification</li>
-    <li>Analytics dashboard</li>
-    <li>History tracking + CSV export</li>
-    </ul>
-
-    <h4>🛠️ Tech Stack</h4>
-    <ul>
-    <li>Python</li>
-    <li>Streamlit</li>
-    <li>TensorFlow</li>
-    <li>OpenCV</li>
-    <li>Plotly</li>
-    </ul>
+    <h3>♻️ Waste Garbage Management System (AI)</h3>
+    <p>This AI-powered system automatically classifies garbage using Deep Learning.</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -156,17 +156,14 @@ elif page == "Detection (Upload)":
     file = st.file_uploader("Upload Image", type=["jpg","png","jpeg"])
 
     if file:
-        img = Image.open(file)
+        img = Image.open(file).convert("RGB")
         st.image(img, width=300)
 
         if st.button("Detect"):
             label, conf = predict(img)
 
-            st.success(f"Prediction: {label}")
-
-            # ✅ Confidence clearly shown
+            st.success(f"♻️ {label.upper()}")
             st.markdown(f"### Confidence: **{round(conf*100,2)}%**")
-
             st.progress(int(conf*100))
 
             save(label, conf)
@@ -179,17 +176,14 @@ elif page == "Camera":
     cam = st.camera_input("Capture Image")
 
     if cam:
-        img = Image.open(cam)
+        img = Image.open(cam).convert("RGB")
         st.image(img, width=300)
 
         if st.button("Detect from Camera"):
             label, conf = predict(img)
 
-            st.success(f"Prediction: {label}")
-
-            # ✅ Confidence clearly shown
+            st.success(f"♻️ {label.upper()}")
             st.markdown(f"### Confidence: **{round(conf*100,2)}%**")
-
             st.progress(int(conf*100))
 
             save(label, conf)
@@ -204,25 +198,10 @@ elif page == "Analytics":
     if df.empty:
         st.warning("No Data")
     else:
-        st.plotly_chart(px.pie(df, names="Label", title="Waste Distribution by Category"))
-
-        st.plotly_chart(px.bar(df, x="Label", title="Total Waste Count by Category"))
-
-        st.plotly_chart(px.histogram(df, x="Confidence", title="Confidence Score Distribution"))
-
-        st.plotly_chart(px.line(df, x="Time", y="Confidence", title="Confidence Trend Over Time"))
-
-        st.plotly_chart(px.scatter(df, x="Confidence", y="Label", title="Confidence vs Category"))
-
-        st.plotly_chart(px.box(df, x="Label", y="Confidence", title="Confidence Spread per Category"))
-
-        st.plotly_chart(px.violin(df, x="Label", y="Confidence", title="Confidence Density Distribution"))
-
-        st.plotly_chart(px.area(df, x="Time", y="Confidence", title="Confidence Area Trend"))
-
-        st.plotly_chart(px.density_heatmap(df, x="Confidence", y="Label", title="Confidence Heatmap"))
-
-        st.plotly_chart(px.strip(df, x="Label", y="Confidence", title="Confidence Strip Plot"))
+        st.plotly_chart(px.pie(df, names="Label", title="Waste Distribution"))
+        st.plotly_chart(px.bar(df, x="Label", title="Waste Count"))
+        st.plotly_chart(px.histogram(df, x="Confidence", title="Confidence Distribution"))
+        st.plotly_chart(px.line(df, x="Time", y="Confidence", title="Confidence Trend"))
 
 # ---------------- HISTORY ----------------
 elif page == "History":
