@@ -21,18 +21,34 @@ st.set_page_config(
 def load_my_model():
     model_path = "final_garbage_model.keras"
     
-    if not os.path.exists(model_path):
-        url = "https://drive.google.com/uc?id=1YsShxgnuv29JCmkvMNx4Gq7wu4qxg3X7"
-        gdown.download(url, model_path, quiet=False)
+    try:
+        if not os.path.exists(model_path):
+            url = "https://drive.google.com/uc?id=1YsShxgnuv29JCmkvMNx4Gq7wu4qxg3X7"
+            gdown.download(url, model_path, quiet=False)
+        
+        return load_model(model_path)
     
-    return load_model(model_path)
+    except Exception as e:
+        st.error(f"❌ Model load failed: {e}")
+        return None
+
+model = load_my_model()
+if model is None:
+    st.stop()
 
 # ---------------- LOAD CLASS LABELS ----------------
 @st.cache_resource
 def load_classes():
-    with open("class_names.json", "r") as f:
-        class_indices = json.load(f)
-    return list(class_indices.keys())
+    try:
+        with open("class_names.json", "r") as f:
+            class_indices = json.load(f)
+        return list(class_indices.keys())
+    except:
+        return [
+            'battery','biological','brown-glass','cardboard',
+            'clothes','green-glass','metal','paper',
+            'plastic','shoes','trash','white-glass'
+        ]
 
 labels = load_classes()
 
@@ -42,12 +58,13 @@ def predict(img):
     img_array = np.array(img) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
 
-    prediction = model.predict(img_array)
+    preds = model.predict(img_array)[0]
 
-    label = labels[np.argmax(prediction)]
-    confidence = float(np.max(prediction))
+    # Top 3
+    top3_idx = preds.argsort()[-3:][::-1]
+    top3 = [(labels[i], float(preds[i])) for i in top3_idx]
 
-    return label, confidence
+    return top3, preds
 
 # ---------------- LOGIN BG ----------------
 def login_bg():
@@ -152,8 +169,28 @@ if page == "Project Overview":
 
     st.markdown("""
     <div class="card">
-    <h3>♻️ Waste Garbage Management System (AI)</h3>
-    <p>This AI-powered system automatically classifies garbage using Deep Learning.</p>
+    <h3>♻️ Smart Waste Management System (AI)</h3>
+
+    <p>This AI-powered system automatically classifies garbage into multiple categories using Deep Learning. 
+    It improves waste segregation and supports recycling efficiency.</p>
+
+    <h4>🌟 Key Features</h4>
+    <ul>
+    <li>Image-based waste detection</li>
+    <li>Camera live detection</li>
+    <li>Top-3 AI predictions</li>
+    <li>Confidence visualization</li>
+    <li>Analytics dashboard</li>
+    <li>History tracking + CSV export</li>
+    </ul>
+
+    <h4>🛠️ Tech Stack</h4>
+    <ul>
+    <li>Python</li>
+    <li>Streamlit</li>
+    <li>TensorFlow (CNN)</li>
+    <li>Plotly</li>
+    </ul>
     </div>
     """, unsafe_allow_html=True)
 
@@ -169,11 +206,31 @@ elif page == "Detection (Upload)":
         st.image(img, width=300)
 
         if st.button("Detect"):
-            label, conf = predict(img)
+
+            top3, preds = predict(img)
+
+            # Top 1
+            label, conf = top3[0]
 
             st.success(f"♻️ {label.upper()}")
             st.markdown(f"### Confidence: **{round(conf*100,2)}%**")
             st.progress(int(conf*100))
+
+            # 🔥 Top 3 display
+            st.markdown("### 🔥 Top 3 Predictions")
+            for l, c in top3:
+                st.write(f"{l} → {round(c*100,2)}%")
+
+            # 📊 Chart
+            df_chart = pd.DataFrame({
+                "Category": labels,
+                "Confidence": preds
+            })
+
+            st.plotly_chart(
+                px.bar(df_chart, x="Category", y="Confidence",
+                       title="Prediction Probability Distribution")
+            )
 
             save(label, conf)
 
@@ -189,11 +246,28 @@ elif page == "Camera":
         st.image(img, width=300)
 
         if st.button("Detect from Camera"):
-            label, conf = predict(img)
+
+            top3, preds = predict(img)
+
+            label, conf = top3[0]
 
             st.success(f"♻️ {label.upper()}")
             st.markdown(f"### Confidence: **{round(conf*100,2)}%**")
             st.progress(int(conf*100))
+
+            st.markdown("### 🔥 Top 3 Predictions")
+            for l, c in top3:
+                st.write(f"{l} → {round(c*100,2)}%")
+
+            df_chart = pd.DataFrame({
+                "Category": labels,
+                "Confidence": preds
+            })
+
+            st.plotly_chart(
+                px.bar(df_chart, x="Category", y="Confidence",
+                       title="Prediction Probability Distribution")
+            )
 
             save(label, conf)
 
