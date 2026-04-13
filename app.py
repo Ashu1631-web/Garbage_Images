@@ -1,114 +1,262 @@
 import streamlit as st
 import numpy as np
-import tensorflow as tf
-from keras.models import load_model
+import pandas as pd
+import cv2
 from PIL import Image
-import json
-import plotly.express as px
 import os
+from datetime import datetime
+import plotly.express as px
 
-st.set_page_config(page_title="Waste Classification AI", layout="wide")
+st.set_page_config(page_title="♻️ Waste AI", layout="wide")
 
-# ---------------- MODEL LOAD ---------------- #
+# ---------------- MODEL (FIXED) ----------------
 @st.cache_resource
-def load_my_model():
+def load_model_safe():
     try:
-        model = load_model("final_garbage_model.keras", compile=False)
+        from tensorflow.keras.models import load_model
+        model = load_model("model.h5", compile=False)
+        st.success("✅ Model Loaded Successfully")
         return model
     except Exception as e:
-        st.error(f"❌ Model load failed: {e}")
+        st.error(f"❌ Model Load Error: {e}")
         return None
 
-model = load_my_model()
+model = load_model_safe()
 
-# ---------------- LOAD CLASS NAMES ---------------- #
-with open("class_names.json", "r") as f:
-    class_names = json.load(f)
-
-# ---------------- SIDEBAR ---------------- #
-st.sidebar.title("⚙️ Menu")
-st.sidebar.success("Model Ready ✅" if model else "Model Error ❌")
-
-# ---------------- PROJECT OVERVIEW ---------------- #
-st.title("♻️ Waste Garbage Management System (AI)")
-
-st.markdown("""
-### 📌 Project Overview
-यह AI आधारित सिस्टम image upload करके waste classify करता है:
-- Plastic
-- Metal
-- Glass
-- Paper
-- Trash
-- Battery
-- Clothes आदि
-
-👉 Deep Learning model (Keras) use किया गया है।
-""")
-
-# ---------------- IMAGE PREPROCESS ---------------- #
-def preprocess_image(img):
-    img = img.resize((160, 160))
-    img = np.array(img) / 255.0
-    img = np.expand_dims(img, axis=0)
-    return img
-
-# ---------------- PREDICT FUNCTION ---------------- #
-def predict(img):
+def load_labels():
     try:
-        img_array = preprocess_image(img)
-        prediction = model.predict(img_array)[0]
+        with open("labels.txt") as f:
+            return [i.strip() for i in f.readlines()]
+    except:
+        return ["cardboard","glass","metal","paper","plastic","trash"]
 
-        top3_idx = prediction.argsort()[-3:][::-1]
+labels = load_labels()
 
-        results = []
-        for i in top3_idx:
-            results.append((class_names[i], float(prediction[i])))
+# ---------------- LOGIN BG ----------------
+def set_login_bg():
+    st.markdown("""
+    <style>
+    .stApp {
+        background: url("https://www.kelvinindia.in/blog/wp-content/uploads/2024/06/Waste-Management.jpg") no-repeat center center fixed;
+        background-size: cover;
+    }
+    .stApp::before {
+        content:"";
+        position:fixed;
+        width:100%;
+        height:100%;
+        background:rgba(0,0,0,0.7);
+        top:0;
+        left:0;
+        z-index:0;
+    }
+    .block-container {
+        position:relative;
+        z-index:1;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-        label = results[0][0]
-        confidence = results[0][1]
+# ---------------- MAIN UI ----------------
+def set_ui():
+    st.markdown("""
+    <style>
+    .stApp {
+        background: linear-gradient(135deg,#020617,#0f172a);
+        color:white;
+    }
+    [data-testid="stSidebar"] {
+        background: rgba(255,255,255,0.05);
+        backdrop-filter: blur(10px);
+    }
+    .card {
+        background: rgba(255,255,255,0.08);
+        padding:20px;
+        border-radius:12px;
+        margin:10px 0;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
-        return label, confidence, results
+# ---------------- LOGIN ----------------
+if "login" not in st.session_state:
+    st.session_state.login=False
+
+def login():
+    set_login_bg()
+    st.title("♻️ Waste AI Login")
+
+    u = st.text_input("Username")
+    p = st.text_input("Password", type="password")
+
+    if st.button("Login"):
+        if u=="admin" and p=="1234":
+            st.session_state.login=True
+        else:
+            st.error("Invalid login")
+
+if not st.session_state.login:
+    login()
+    st.stop()
+
+# ---------------- AFTER LOGIN ----------------
+set_ui()
+
+# ---------------- PREDICTION (FIXED) ----------------
+def predict(image):
+    if model is None:
+        return "Model Not Loaded", 0.0
+
+    try:
+        img = image.resize((160,160))
+        img = np.array(img) / 255.0
+        img = np.expand_dims(img, axis=0)
+
+        pred = model.predict(img)
+        idx = np.argmax(pred)
+        conf = float(np.max(pred))
+
+        return labels[idx], conf
 
     except Exception as e:
         st.error(f"Prediction Error: {e}")
-        return "Model Error", 0.0, []
+        return "Prediction Error", 0.0
 
-# ---------------- UI ---------------- #
-st.header("📤 Upload Detection")
+def draw(image, label, conf):
+    img = np.array(image)
+    h,w,_ = img.shape
 
-uploaded_file = st.file_uploader("Upload Image", type=["jpg", "png", "jpeg"])
+    cv2.rectangle(img,(20,20),(w-20,h-20),(0,255,0),2)
 
-if uploaded_file:
-    image = Image.open(uploaded_file).convert("RGB")
-    st.image(image, width=300)
+    # FIXED TEXT (NO ERROR 0%)
+    text = f"{label} ({round(conf*100,2)}%)" if conf > 0 else "No Prediction"
 
-    if st.button("Detect"):
-        if model is None:
-            st.error("❌ Model not loaded")
-        else:
-            label, confidence, top3 = predict(image)
+    cv2.putText(img,text,(30,40),
+                cv2.FONT_HERSHEY_SIMPLEX,1,(0,255,0),2)
 
-            st.success(f"Prediction: {label}")
-            st.write(f"### Confidence: {round(confidence*100,2)}%")
+    return img
 
-            # ---------------- TOP 3 ---------------- #
-            st.subheader("🔥 Top 3 Predictions")
+# ---------------- HISTORY ----------------
+def save(label,conf):
+    df=pd.DataFrame([{
+        "Label":label,
+        "Confidence":conf,
+        "Time":datetime.now()
+    }])
+    if os.path.exists("history.csv"):
+        old=pd.read_csv("history.csv")
+        df=pd.concat([old,df])
+    df.to_csv("history.csv",index=False)
 
-            labels = [x[0] for x in top3]
-            probs = [x[1] for x in top3]
+def load():
+    if os.path.exists("history.csv"):
+        return pd.read_csv("history.csv")
+    return pd.DataFrame()
 
-            for i in range(len(top3)):
-                st.write(f"{labels[i]} → {round(probs[i]*100,2)}%")
+# ---------------- SIDEBAR ----------------
+st.sidebar.title("⚙️ Menu")
 
-            # ---------------- CHART ---------------- #
-            fig = px.bar(
-                x=labels,
-                y=probs,
-                labels={"x": "Class", "y": "Probability"},
-                title="📊 Prediction Probability"
-            )
-            st.plotly_chart(fig)
+page = st.sidebar.selectbox("Navigate",
+["Overview","Detection (Upload)","Camera","Analytics","History"])
 
-# ---------------- DEBUG (optional remove later) ---------------- #
-# st.write("Files:", os.listdir())
+# ---------------- OVERVIEW ----------------
+if page=="Overview":
+    st.title("🌍 Project Overview")
+
+    st.markdown("""
+    <div class="card">
+    <h3>♻️ Smart Waste Management System (AI)</h3>
+
+    <h4>Project Description</h4>
+    <p>This is an AI-powered application designed to automatically identify and classify different types of garbage. 
+    By using Deep Learning, the system helps in sorting waste quickly, making the recycling process more efficient and eco-friendly.</p>
+
+    <h4>🌟 Key Features</h4>
+    <ul>
+    <li><b>Instant Detection:</b> Uses a trained AI model to identify waste from uploaded photos or live camera captures.</li>
+    <li><b>6-Way Classification:</b> Categorizes waste into Cardboard, Glass, Metal, Paper, Plastic, and Trash.</li>
+    <li><b>Smart Analytics:</b> Visualizes waste data using interactive charts.</li>
+    <li><b>Secure Access:</b> Login system for authorized users.</li>
+    <li><b>Data History:</b> Saves scans and allows CSV download.</li>
+    </ul>
+
+    <h4>🛠️ Technologies Used</h4>
+    <ul>
+    <li>Python</li>
+    <li>Streamlit</li>
+    <li>TensorFlow / Keras</li>
+    <li>OpenCV</li>
+    <li>Plotly</li>
+    </ul>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ---------------- DETECTION (UPLOAD) ----------------
+elif page=="Detection (Upload)":
+
+    st.title("📤 Upload Detection")
+
+    file = st.file_uploader("Upload Image", type=["jpg","png","jpeg"])
+
+    if file:
+        img = Image.open(file)
+        st.image(img, width=300)
+
+        if st.button("Detect"):
+            label, conf = predict(img)
+            st.image(draw(img,label,conf))
+            st.success(label)
+            st.progress(int(conf*100))
+            save(label,conf)
+
+# ---------------- CAMERA ----------------
+elif page=="Camera":
+
+    st.title("📸 Camera Detection")
+
+    cam = st.camera_input("Capture Image")
+
+    if cam:
+        img = Image.open(cam)
+        st.image(img, width=300)
+
+        if st.button("Detect from Camera"):
+            label, conf = predict(img)
+            st.image(draw(img,label,conf))
+            st.success(label)
+            st.progress(int(conf*100))
+            save(label,conf)
+
+# ---------------- ANALYTICS ----------------
+elif page=="Analytics":
+
+    st.title("📊 Analytics Dashboard")
+
+    df = load()
+
+    if df.empty:
+        st.warning("No data available")
+    else:
+        st.plotly_chart(px.pie(df,names="Label",title="Waste Distribution"))
+        st.plotly_chart(px.bar(df,x="Label",title="Count by Category"))
+        st.plotly_chart(px.histogram(df,x="Confidence",title="Confidence Distribution"))
+        st.plotly_chart(px.line(df,x="Time",y="Confidence",title="Confidence Over Time"))
+        st.plotly_chart(px.box(df,x="Label",y="Confidence",title="Confidence Spread"))
+        st.plotly_chart(px.violin(df,x="Label",y="Confidence",title="Density"))
+        st.plotly_chart(px.scatter(df,x="Confidence",y="Label",title="Scatter Plot"))
+        st.plotly_chart(px.area(df,x="Time",y="Confidence",title="Trend Analysis"))
+        st.plotly_chart(px.strip(df,x="Label",y="Confidence",title="Strip Plot"))
+        st.plotly_chart(px.density_heatmap(df,x="Confidence",y="Label",title="Heatmap"))
+
+# ---------------- HISTORY ----------------
+elif page=="History":
+
+    st.title("📂 History")
+
+    df = load()
+
+    if df.empty:
+        st.warning("No history")
+    else:
+        st.dataframe(df)
+        st.download_button("Download CSV", df.to_csv(index=False), "history.csv")
