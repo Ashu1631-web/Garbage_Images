@@ -3,7 +3,6 @@ import numpy as np
 import tensorflow as tf
 from PIL import Image
 import json
-import plotly.express as px
 
 # ====================== PAGE CONFIG ====================== #
 st.set_page_config(
@@ -35,7 +34,14 @@ def load_my_model():
 def load_class_names():
     try:
         with open("class_names.json", "r") as f:
-            return json.load(f)
+            data = json.load(f)
+
+            # 🔥 FIX: dict → list conversion
+            if isinstance(data, dict):
+                data = [k for k, v in sorted(data.items(), key=lambda x: x[1])]
+
+            return data
+
     except Exception as e:
         st.error(f"❌ class_names.json load failed: {e}")
         return []
@@ -49,6 +55,7 @@ st.sidebar.success("Model Ready ✅" if model else "Model Error ❌")
 st.sidebar.info(f"Total Classes: {len(class_names)}")
 st.sidebar.markdown("---")
 st.sidebar.markdown("**Supported Waste Types:**")
+
 for name in class_names:
     st.sidebar.write(f"• {name}")
 
@@ -62,7 +69,7 @@ This AI-powered system classifies waste from images into categories:
 
 Upload an image or use your **Live Webcam** to detect waste type instantly.
 
-👉 Built using **MobileNetV2 + Transfer Learning** (Keras / TensorFlow)
+👉 Built using **MobileNetV2 + Transfer Learning**
 """)
 st.divider()
 
@@ -77,11 +84,22 @@ def predict(img: Image.Image):
     try:
         arr = preprocess_image(img)
         preds = model.predict(arr, verbose=0)[0]
+
+        # Safety check
+        if len(preds) != len(class_names):
+            st.error(f"⚠️ Class mismatch → Model: {len(preds)} vs Labels: {len(class_names)}")
+            return "Mismatch Error", 0.0, []
+
         top3_idx = preds.argsort()[-3:][::-1]
-        results = [(class_names[int(i)], float(preds[i])) for i in top3_idx]
+
+        results = []
+        for i in top3_idx:
+            results.append((class_names[int(i)], float(preds[i])))
+
         return results[0][0], results[0][1], results
+
     except Exception as e:
-        st.error(f"⚠️ Prediction Error: {e}")
+        st.error(f"⚠️ Prediction Error: {str(e)}")
         return "Error", 0.0, []
 
 # ====================== SHOW RESULTS ====================== #
@@ -106,30 +124,12 @@ def show_results(image):
         st.write(f"**#{rank}** {lbl} → `{round(prob * 100, 2)}%`")
         st.progress(float(prob))
 
-    def show_results(image):
-    if model is None:
-        st.error("❌ Model not loaded.")
-        return
-    if not class_names:
-        st.error("❌ class_names.json not found.")
-        return
-
-    with st.spinner("Analyzing..."):
-        label, confidence, top3 = predict(image)
-
-    st.success(f"✅ Predicted: **{label.upper()}**")
-    st.metric(label="Confidence", value=f"{round(confidence * 100, 2)}%")
-
-    st.subheader("🔥 Top 3 Predictions")
-
-    for rank, (lbl, prob) in enumerate(top3, start=1):
-        st.write(f"**#{rank}** {lbl} → `{round(prob * 100, 2)}%`")
-        st.progress(float(prob))
 # ====================== TABS ====================== #
 tab1, tab2 = st.tabs(["📤 Upload Image", "📷 Live Webcam"])
 
 with tab1:
     st.header("📤 Upload Image for Detection")
+
     col1, col2 = st.columns([1, 2])
 
     with col1:
@@ -137,6 +137,7 @@ with tab1:
             "Upload a waste image",
             type=["jpg", "jpeg", "png"]
         )
+
         if uploaded_file:
             image = Image.open(uploaded_file).convert("RGB")
             st.image(image, caption="Uploaded Image", width=280)
@@ -152,12 +153,16 @@ with tab1:
 
 with tab2:
     st.header("📷 Live Webcam Detection")
+
     cam_image = st.camera_input("Point camera at waste item")
+
     if cam_image:
         col1, col2 = st.columns([1, 2])
+
         with col1:
             image = Image.open(cam_image).convert("RGB")
             st.image(image, caption="Captured Image", width=280)
+
         with col2:
             show_results(image)
 
