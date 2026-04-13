@@ -20,13 +20,20 @@ st.set_page_config(
 @st.cache_resource
 def load_my_model():
     model_path = "final_garbage_model.keras"
+
     try:
         if not os.path.exists(model_path):
             url = "https://drive.google.com/uc?id=1YsShxgnuv29JCmkvMNx4Gq7wu4qxg3X7"
-            gdown.download(url, model_path, quiet=True)
-        return load_model(model_path)
-    except:
+            gdown.download(url, model_path, quiet=False)
+
+        model = tf.keras.models.load_model(model_path, compile=False)
+        st.success("✅ Model loaded successfully")
+        return model
+
+    except Exception as e:
+        st.error(f"❌ Model load failed: {e}")
         return None
+
 
 model = load_my_model()
 
