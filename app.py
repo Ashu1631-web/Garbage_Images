@@ -18,7 +18,7 @@ st.set_page_config(
 # ---------------- LOAD MODEL ----------------
 @st.cache_resource
 def load_my_model():
-    model_path = "fixed_model.h5"
+    model_path = "final_fixed_model.h5"
 
     try:
         model = tf.keras.models.load_model(model_path, compile=False)
