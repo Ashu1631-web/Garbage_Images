@@ -12,36 +12,55 @@ st.set_page_config(
     page_icon="🌱"
 )
 
-# ---------------- CSS ----------------
-st.markdown("""
-<style>
-body {
-    background: #0f172a;
-    color: white;
-}
-.sidebar .sidebar-content {
-    background: #111827;
-}
-.stButton>button {
-    background: linear-gradient(90deg,#00c6ff,#0072ff);
-    color:white;
-    border-radius:10px;
-}
-.card {
-    background:#1e293b;
-    padding:20px;
-    border-radius:12px;
-    margin:10px 0;
-}
-</style>
-""", unsafe_allow_html=True)
+# ---------------- LOGIN BG ----------------
+def login_bg():
+    st.markdown("""
+    <style>
+    .stApp {
+        background: url("https://www.kelvinindia.in/blog/wp-content/uploads/2024/06/Waste-Management.jpg") no-repeat center center fixed;
+        background-size: cover;
+    }
+    .stApp::before {
+        content:"";
+        position:fixed;
+        width:100%;
+        height:100%;
+        background:rgba(0,0,0,0.7);
+        top:0;
+        left:0;
+        z-index:0;
+    }
+    .block-container {
+        position:relative;
+        z-index:1;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# ---------------- MAIN UI ----------------
+def main_ui():
+    st.markdown("""
+    <style>
+    .stApp {
+        background: linear-gradient(135deg,#020617,#0f172a);
+        color:white;
+    }
+    .card {
+        background:#1e293b;
+        padding:20px;
+        border-radius:12px;
+        margin:10px 0;
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
 # ---------------- LOGIN ----------------
 if "login" not in st.session_state:
     st.session_state.login = False
 
 def login():
-    st.title("🔐 Login")
+    login_bg()
+    st.title("♻️ Waste AI Login")
     user = st.text_input("Username")
     pwd = st.text_input("Password", type="password")
 
@@ -55,17 +74,15 @@ if not st.session_state.login:
     login()
     st.stop()
 
-# ---------------- SIDEBAR ----------------
-st.sidebar.title("⚙️ Input Mode")
+# ---------------- AFTER LOGIN ----------------
+main_ui()
 
-mode = st.sidebar.radio(
-    "Choose input mode:",
-    ["Upload Image", "Camera Capture"]
-)
+# ---------------- SIDEBAR ----------------
+st.sidebar.title("⚙️ Menu")
 
 page = st.sidebar.selectbox(
     "Navigate",
-    ["Home", "Detection", "Analytics", "History"]
+    ["Project Overview","Detection (Upload)","Camera","Analytics","History"]
 )
 
 # ---------------- FAKE MODEL ----------------
@@ -76,7 +93,7 @@ def predict(img):
     confidence = round(np.random.uniform(0.75, 0.98), 2)
     return label, confidence
 
-# ---------------- SAVE HISTORY ----------------
+# ---------------- SAVE ----------------
 def save(label, conf):
     df = pd.DataFrame([{
         "Label": label,
@@ -92,81 +109,98 @@ def save(label, conf):
 
     df.to_csv("history.csv", index=False)
 
-# ---------------- LOAD HISTORY ----------------
+# ---------------- LOAD ----------------
 def load():
     try:
         return pd.read_csv("history.csv")
     except:
         return pd.DataFrame()
 
-# ---------------- HOME ----------------
-if page == "Home":
-    st.markdown("<h1 style='color:#22c55e;'>🌿 Waste Classification App</h1>", unsafe_allow_html=True)
-    st.write("Classify waste as Organic or Inorganic using AI")
+# ---------------- PROJECT OVERVIEW ----------------
+if page == "Project Overview":
 
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Predictions", "1250")
-    col2.metric("Accuracy", "92%")
-    col3.metric("Users", "340")
+    st.title("🌍 Project Overview")
 
-    st.markdown("---")
-    st.info("Powered by TensorFlow, OpenCV, Streamlit")
+    st.markdown("""
+    <div class="card">
+    <h3>♻️ Smart Waste Management System (AI)</h3>
 
-# ---------------- DETECTION ----------------
-elif page == "Detection":
+    <p>This AI-powered system automatically classifies garbage into different categories using Deep Learning. 
+    It helps improve waste sorting efficiency and supports eco-friendly recycling.</p>
 
-    st.header("📤 Upload Image")
+    <h4>🌟 Key Features</h4>
+    <ul>
+    <li>Image-based waste detection</li>
+    <li>Camera live detection</li>
+    <li>5-category classification</li>
+    <li>Analytics dashboard</li>
+    <li>History tracking + CSV export</li>
+    </ul>
 
-    image = None
+    <h4>🛠️ Tech Stack</h4>
+    <ul>
+    <li>Python</li>
+    <li>Streamlit</li>
+    <li>TensorFlow</li>
+    <li>OpenCV</li>
+    <li>Plotly</li>
+    </ul>
+    </div>
+    """, unsafe_allow_html=True)
 
-    if mode == "Upload Image":
-        file = st.file_uploader("Upload", type=["jpg","png","jpeg"])
-        if file:
-            image = Image.open(file)
+# ---------------- UPLOAD ----------------
+elif page == "Detection (Upload)":
 
-    elif mode == "Camera Capture":
-        cam = st.camera_input("Capture")
-        if cam:
-            image = Image.open(cam)
+    st.header("📤 Upload Detection")
 
-    if image:
-        st.image(image, width=300)
+    file = st.file_uploader("Upload Image", type=["jpg","png","jpeg"])
 
-        if st.button("🔍 Predict"):
-            label, conf = predict(image)
+    if file:
+        img = Image.open(file)
+        st.image(img, width=300)
 
-            st.success(f"Prediction: {label}")
+        if st.button("Detect"):
+            label, conf = predict(img)
+            st.success(label)
             st.progress(int(conf*100))
+            save(label, conf)
 
+# ---------------- CAMERA ----------------
+elif page == "Camera":
+
+    st.header("📸 Camera Detection")
+
+    cam = st.camera_input("Capture Image")
+
+    if cam:
+        img = Image.open(cam)
+        st.image(img, width=300)
+
+        if st.button("Detect from Camera"):
+            label, conf = predict(img)
+            st.success(label)
+            st.progress(int(conf*100))
             save(label, conf)
 
 # ---------------- ANALYTICS ----------------
 elif page == "Analytics":
 
-    st.title("📊 Analytics Dashboard")
+    st.title("📊 Analytics")
 
     df = load()
 
     if df.empty:
-        st.warning("No Data Available")
+        st.warning("No Data")
     else:
         st.plotly_chart(px.pie(df, names="Label"))
         st.plotly_chart(px.bar(df, x="Label"))
         st.plotly_chart(px.histogram(df, x="Confidence"))
         st.plotly_chart(px.line(df, x="Time", y="Confidence"))
 
-        # EXTRA GRAPHS
-        st.plotly_chart(px.scatter(df, x="Confidence", y="Label"))
-        st.plotly_chart(px.box(df, x="Label", y="Confidence"))
-        st.plotly_chart(px.violin(df, x="Label", y="Confidence"))
-        st.plotly_chart(px.area(df, x="Time", y="Confidence"))
-        st.plotly_chart(px.density_heatmap(df, x="Confidence", y="Label"))
-        st.plotly_chart(px.strip(df, x="Label", y="Confidence"))
-
 # ---------------- HISTORY ----------------
 elif page == "History":
 
-    st.title("📂 Prediction History")
+    st.title("📂 History")
 
     df = load()
 
@@ -174,6 +208,4 @@ elif page == "History":
         st.warning("No history")
     else:
         st.dataframe(df)
-
-        csv = df.to_csv(index=False).encode()
-        st.download_button("⬇ Download CSV", csv, "history.csv")
+        st.download_button("Download CSV", df.to_csv(index=False), "history.csv")
