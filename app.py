@@ -78,7 +78,7 @@ def predict(img: Image.Image):
         arr = preprocess_image(img)
         preds = model.predict(arr, verbose=0)[0]
         top3_idx = preds.argsort()[-3:][::-1]
-        results = [(class_names[i], float(preds[i])) for i in top3_idx]
+        results = [(class_names[int(i)], float(preds[i])) for i in top3_idx]
         return results[0][0], results[0][1], results
     except Exception as e:
         st.error(f"⚠️ Prediction Error: {e}")
