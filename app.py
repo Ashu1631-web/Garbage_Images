@@ -4,6 +4,7 @@ import numpy as np
 from PIL import Image
 from datetime import datetime
 import plotly.express as px
+import tensorflow as tf
 from tensorflow.keras.models import load_model
 import json
 import gdown
