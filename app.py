@@ -17,7 +17,6 @@ st.set_page_config(
 )
 
 # ---------------- LOAD MODEL ----------------
-# ---------------- LOAD MODEL ----------------
 @st.cache_resource
 def load_my_model():
     model_path = "final_garbage_model.keras"
