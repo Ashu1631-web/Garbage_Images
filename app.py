@@ -162,6 +162,7 @@ elif page == "Detection (Upload)":
         if st.button("Detect"):
             label, conf = predict(img)
             st.success(label)
+            st.success(f"Prediction: {label}")
             st.progress(int(conf*100))
             save(label, conf)
 
