@@ -16,47 +16,26 @@ st.set_page_config(
     page_icon="🌱"
 )
 
-# ---------------- LOAD MODEL ----------------
+# ---------------- LOAD MODEL (NO UI BLOCK) ----------------
 @st.cache_resource
 def load_my_model():
     model_path = "final_garbage_model.keras"
-    
     try:
         if not os.path.exists(model_path):
-            st.info("📥 Downloading AI model... please wait")
-
             url = "https://drive.google.com/uc?id=1YsShxgnuv29JCmkvMNx4Gq7wu4qxg3X7"
-            gdown.download(url, model_path, quiet=False)
-
-        st.success("✅ Model file ready")
-
-        model = load_model(model_path)
-
-        st.success("✅ Model loaded successfully")
-
-        return model
-    
-    except Exception as e:
-        st.error(f"❌ Model load failed: {e}")
+            gdown.download(url, model_path, quiet=True)
+        return load_model(model_path)
+    except:
         return None
-
 
 model = load_my_model()
 
-# ❌ REMOVE st.stop() वाला logic
-# if model is None:
-#     st.stop()
-
-# ✅ Replace with safe message
-if model is None:
-    st.error("🚫 Model failed to load. Check Drive link or requirements.")
-# ---------------- LOAD CLASS LABELS ----------------
+# ---------------- LOAD LABELS ----------------
 @st.cache_resource
 def load_classes():
     try:
         with open("class_names.json", "r") as f:
-            class_indices = json.load(f)
-        return list(class_indices.keys())
+            return list(json.load(f).keys())
     except:
         return [
             'battery','biological','brown-glass','cardboard',
@@ -66,15 +45,17 @@ def load_classes():
 
 labels = load_classes()
 
-# ---------------- PREDICT FUNCTION ----------------
+# ---------------- SAFE PREDICT ----------------
 def predict(img):
+    if model is None:
+        return [("Model Error", 0.0)], np.zeros(len(labels))
+
     img = img.resize((160, 160))
     img_array = np.array(img) / 255.0
     img_array = np.expand_dims(img_array, axis=0)
 
     preds = model.predict(img_array)[0]
 
-    # Top 3
     top3_idx = preds.argsort()[-3:][::-1]
     top3 = [(labels[i], float(preds[i])) for i in top3_idx]
 
@@ -147,6 +128,7 @@ main_ui()
 
 # ---------------- SIDEBAR ----------------
 st.sidebar.title("⚙️ Menu")
+st.sidebar.success("Model Ready ✅" if model else "Model Error ❌")
 
 page = st.sidebar.selectbox(
     "Navigate",
@@ -178,32 +160,19 @@ def load():
 
 # ---------------- PROJECT OVERVIEW ----------------
 if page == "Project Overview":
-
     st.title("🌍 Project Overview")
 
     st.markdown("""
     <div class="card">
     <h3>♻️ Smart Waste Management System (AI)</h3>
+    <p>This AI-powered system classifies garbage using Deep Learning.</p>
 
-    <p>This AI-powered system automatically classifies garbage into multiple categories using Deep Learning. 
-    It improves waste segregation and supports recycling efficiency.</p>
-
-    <h4>🌟 Key Features</h4>
+    <h4>🌟 Features</h4>
     <ul>
-    <li>Image-based waste detection</li>
-    <li>Camera live detection</li>
-    <li>Top-3 AI predictions</li>
-    <li>Confidence visualization</li>
-    <li>Analytics dashboard</li>
-    <li>History tracking + CSV export</li>
-    </ul>
-
-    <h4>🛠️ Tech Stack</h4>
-    <ul>
-    <li>Python</li>
-    <li>Streamlit</li>
-    <li>TensorFlow (CNN)</li>
-    <li>Plotly</li>
+    <li>Image & Camera Detection</li>
+    <li>Top-3 Predictions</li>
+    <li>Confidence Chart</li>
+    <li>Analytics Dashboard</li>
     </ul>
     </div>
     """, unsafe_allow_html=True)
@@ -222,29 +191,22 @@ elif page == "Detection (Upload)":
         if st.button("Detect"):
 
             top3, preds = predict(img)
-
-            # Top 1
             label, conf = top3[0]
 
             st.success(f"♻️ {label.upper()}")
             st.markdown(f"### Confidence: **{round(conf*100,2)}%**")
             st.progress(int(conf*100))
 
-            # 🔥 Top 3 display
             st.markdown("### 🔥 Top 3 Predictions")
             for l, c in top3:
                 st.write(f"{l} → {round(c*100,2)}%")
 
-            # 📊 Chart
             df_chart = pd.DataFrame({
                 "Category": labels,
                 "Confidence": preds
             })
 
-            st.plotly_chart(
-                px.bar(df_chart, x="Category", y="Confidence",
-                       title="Prediction Probability Distribution")
-            )
+            st.plotly_chart(px.bar(df_chart, x="Category", y="Confidence"))
 
             save(label, conf)
 
@@ -262,7 +224,6 @@ elif page == "Camera":
         if st.button("Detect from Camera"):
 
             top3, preds = predict(img)
-
             label, conf = top3[0]
 
             st.success(f"♻️ {label.upper()}")
@@ -278,10 +239,7 @@ elif page == "Camera":
                 "Confidence": preds
             })
 
-            st.plotly_chart(
-                px.bar(df_chart, x="Category", y="Confidence",
-                       title="Prediction Probability Distribution")
-            )
+            st.plotly_chart(px.bar(df_chart, x="Category", y="Confidence"))
 
             save(label, conf)
 
@@ -295,10 +253,9 @@ elif page == "Analytics":
     if df.empty:
         st.warning("No Data")
     else:
-        st.plotly_chart(px.pie(df, names="Label", title="Waste Distribution"))
-        st.plotly_chart(px.bar(df, x="Label", title="Waste Count"))
-        st.plotly_chart(px.histogram(df, x="Confidence", title="Confidence Distribution"))
-        st.plotly_chart(px.line(df, x="Time", y="Confidence", title="Confidence Trend"))
+        st.plotly_chart(px.pie(df, names="Label"))
+        st.plotly_chart(px.bar(df, x="Label"))
+        st.plotly_chart(px.histogram(df, x="Confidence"))
 
 # ---------------- HISTORY ----------------
 elif page == "History":
@@ -311,6 +268,5 @@ elif page == "History":
         st.warning("No history")
     else:
         st.dataframe(df)
-
         csv = df.to_csv(index=False).encode()
         st.download_button("⬇ Download CSV", csv, "history.csv")
