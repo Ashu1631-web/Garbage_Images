@@ -107,18 +107,25 @@ def show_results(image):
         st.write(f"**#{rank}** {lbl} → `{round(prob * 100, 2)}%`")
         st.progress(float(prob))
 
-    fig = px.bar(
-        x=labels,
-        y=[round(p * 100, 2) for p in probs],
-        labels={"x": "Waste Class", "y": "Probability (%)"},
-        title="📊 Top 3 Prediction Probabilities",
-        color=labels,
-        text=[f"{round(p*100,2)}%" for p in probs]
-    )
-    fig.update_traces(textposition="outside")
-    fig.update_layout(showlegend=False, yaxis_range=[0, 110])
-    st.plotly_chart(fig, use_container_width=True)
+    def show_results(image):
+    if model is None:
+        st.error("❌ Model not loaded.")
+        return
+    if not class_names:
+        st.error("❌ class_names.json not found.")
+        return
 
+    with st.spinner("Analyzing..."):
+        label, confidence, top3 = predict(image)
+
+    st.success(f"✅ Predicted: **{label.upper()}**")
+    st.metric(label="Confidence", value=f"{round(confidence * 100, 2)}%")
+
+    st.subheader("🔥 Top 3 Predictions")
+
+    for rank, (lbl, prob) in enumerate(top3, start=1):
+        st.write(f"**#{rank}** {lbl} → `{round(prob * 100, 2)}%`")
+        st.progress(float(prob))
 # ====================== TABS ====================== #
 tab1, tab2 = st.tabs(["📤 Upload Image", "📷 Live Webcam"])
 
