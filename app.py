@@ -7,6 +7,7 @@ import plotly.express as px
 import tensorflow as tf
 import json
 import os
+from keras.models import load_model
 
 # ---------------- CONFIG ----------------
 st.set_page_config(
@@ -18,12 +19,9 @@ st.set_page_config(
 # ---------------- LOAD MODEL ----------------
 @st.cache_resource
 def load_my_model():
-    model_path = "final_fixed_model.h5"
-
     try:
-        model = tf.keras.models.load_model(model_path, compile=False)
+        model = load_model("final_garbage_model.keras", compile=False)
         return model
-
     except Exception as e:
         st.error(f"Model load failed: {e}")
         return None
