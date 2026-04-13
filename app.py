@@ -89,6 +89,7 @@ def show_results(image):
     if model is None:
         st.error("❌ Model not loaded.")
         return
+
     if not class_names:
         st.error("❌ class_names.json not found.")
         return
@@ -100,10 +101,8 @@ def show_results(image):
     st.metric(label="Confidence", value=f"{round(confidence * 100, 2)}%")
 
     st.subheader("🔥 Top 3 Predictions")
-    labels = [x[0] for x in top3]
-    probs  = [x[1] for x in top3]
 
-    for rank, (lbl, prob) in enumerate(zip(labels, probs), start=1):
+    for rank, (lbl, prob) in enumerate(top3, start=1):
         st.write(f"**#{rank}** {lbl} → `{round(prob * 100, 2)}%`")
         st.progress(float(prob))
 
