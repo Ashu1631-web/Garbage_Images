@@ -18,6 +18,8 @@ st.set_page_config(
 )
 
 # ---------------- LOAD MODEL (NO UI BLOCK) ----------------
+import tensorflow as tf
+
 @st.cache_resource
 def load_my_model():
     model_path = "final_garbage_model.keras"
@@ -28,15 +30,11 @@ def load_my_model():
             gdown.download(url, model_path, quiet=False)
 
         model = tf.keras.models.load_model(model_path, compile=False)
-        st.success("✅ Model loaded successfully")
         return model
 
     except Exception as e:
-        st.error(f"❌ Model load failed: {e}")
+        st.error(f"Model load failed: {e}")
         return None
-
-
-model = load_my_model()
 
 # ---------------- LOAD LABELS ----------------
 @st.cache_resource
