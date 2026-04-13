@@ -5,6 +5,7 @@ from PIL import Image
 from datetime import datetime
 import plotly.express as px
 from tensorflow.keras.models import load_model
+import json
 
 # ---------------- CONFIG ----------------
 st.set_page_config(
@@ -20,12 +21,14 @@ def load_my_model():
 
 model = load_my_model()
 
-# ---------------- CLASS LABELS ----------------
-labels = [
-    'battery', 'biological', 'brown-glass', 'cardboard',
-    'clothes', 'green-glass', 'metal', 'paper',
-    'plastic', 'shoes', 'trash', 'white-glass'
-]
+# ---------------- LOAD CLASS LABELS ----------------
+@st.cache_resource
+def load_classes():
+    with open("class_names.json", "r") as f:
+        class_indices = json.load(f)
+    return list(class_indices.keys())
+
+labels = load_classes()
 
 # ---------------- PREDICT FUNCTION ----------------
 def predict(img):
