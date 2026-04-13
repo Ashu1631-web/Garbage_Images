@@ -17,25 +17,40 @@ st.set_page_config(
 )
 
 # ---------------- LOAD MODEL ----------------
+# ---------------- LOAD MODEL ----------------
 @st.cache_resource
 def load_my_model():
     model_path = "final_garbage_model.keras"
     
     try:
         if not os.path.exists(model_path):
+            st.info("📥 Downloading AI model... please wait")
+
             url = "https://drive.google.com/uc?id=1YsShxgnuv29JCmkvMNx4Gq7wu4qxg3X7"
             gdown.download(url, model_path, quiet=False)
-        
-        return load_model(model_path)
+
+        st.success("✅ Model file ready")
+
+        model = load_model(model_path)
+
+        st.success("✅ Model loaded successfully")
+
+        return model
     
     except Exception as e:
         st.error(f"❌ Model load failed: {e}")
         return None
 
-model = load_my_model()
-if model is None:
-    st.stop()
 
+model = load_my_model()
+
+# ❌ REMOVE st.stop() वाला logic
+# if model is None:
+#     st.stop()
+
+# ✅ Replace with safe message
+if model is None:
+    st.error("🚫 Model failed to load. Check Drive link or requirements.")
 # ---------------- LOAD CLASS LABELS ----------------
 @st.cache_resource
 def load_classes():
