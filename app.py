@@ -18,7 +18,7 @@ st.set_page_config(
 def load_my_model():
     try:
         model = keras.models.load_model(
-            "final_garbage_model.h5",
+            "clean_model.h5",
             compile=False
         )
         return model
