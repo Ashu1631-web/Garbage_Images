@@ -327,33 +327,59 @@ if "class_names" not in st.session_state:
     st.session_state.class_names = []
 
 # ====================== LOAD MODEL ====================== #
-# ---- Resolve absolute paths relative to this script ---- #
+# ---- Paths ---- #
 BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "final_garbage_model.keras")
 CLASS_PATH = os.path.join(BASE_DIR, "class_names.json")
+MODEL_PATH = os.path.join(BASE_DIR, "final_garbage_model.keras")
+
+# ---- Google Drive file ID (paste yours below) ---- #
+GDRIVE_FILE_ID = st.secrets.get("GDRIVE_FILE_ID", "1YsShxgnuv29JCmkvMNx4Gq7wu4qxg3X7")
 
 @st.cache_resource
 def load_my_model():
-    # Debug: show what files Streamlit can actually see
-    try:
-        all_files = os.listdir(BASE_DIR)
-    except Exception:
-        all_files = []
-    keras_files = [f for f in all_files if f.endswith(".keras") or f.endswith(".h5")]
+    """Load model: first try local, then Google Drive."""
+    # 1) Already downloaded in this session?
+    if os.path.exists(MODEL_PATH):
+        try:
+            return load_model(MODEL_PATH, compile=False)
+        except Exception as e:
+            st.error(f"Local model load error: {e}")
+            return None
 
-    if not os.path.exists(MODEL_PATH):
-        # Try to find any .keras or .h5 file in the directory
-        if keras_files:
-            alt_path = os.path.join(BASE_DIR, keras_files[0])
-            try:
-                return load_model(alt_path, compile=False)
-            except Exception:
-                pass
-        return None
-    try:
-        return load_model(MODEL_PATH, compile=False)
-    except Exception:
-        return None
+    # 2) Try downloading from Google Drive
+    file_id = GDRIVE_FILE_ID
+    if not file_id:
+        # Read from sidebar input (set once per session)
+        file_id = st.session_state.get("gdrive_id", "")
+
+    if file_id:
+        try:
+            import requests
+            with st.spinner("⬇️ Downloading model from Google Drive... (this may take a minute)"):
+                # Step 1: get confirm token for large files
+                session = requests.Session()
+                url = f"https://drive.google.com/uc?export=download&id={file_id}"
+                resp = session.get(url, stream=True)
+                # Extract confirm token if present
+                token = None
+                for key, val in resp.cookies.items():
+                    if key.startswith("download_warning"):
+                        token = val
+                        break
+                if token:
+                    url = f"https://drive.google.com/uc?export=download&id={file_id}&confirm={token}"
+                    resp = session.get(url, stream=True)
+                # Write to file
+                with open(MODEL_PATH, "wb") as f:
+                    for chunk in resp.iter_content(chunk_size=32768):
+                        if chunk:
+                            f.write(chunk)
+            return load_model(MODEL_PATH, compile=False)
+        except Exception as e:
+            st.error(f"Google Drive download failed: {e}")
+            return None
+
+    return None
 
 @st.cache_data
 def load_class_names():
@@ -377,19 +403,30 @@ model       = load_my_model()
 class_names = load_class_names()
 
 
-# ---- Sidebar debug info ---- #
+# ---- Sidebar: Google Drive model loader ---- #
 with st.sidebar:
-    st.markdown("### Debug Info")
-    st.code("BASE_DIR: " + str(BASE_DIR))
-    try:
-        files = os.listdir(BASE_DIR)
-        file_list = chr(10).join(sorted(files))
-        st.code("Files found:" + chr(10) + file_list)
-    except Exception as e:
-        st.error("Cannot list dir: " + str(e))
-    st.write("Model exists:", os.path.exists(MODEL_PATH))
-    st.write("JSON exists:", os.path.exists(CLASS_PATH))
-    st.caption("Remove this sidebar after fixing")
+    st.markdown("### Model Loader")
+    st.caption("Paste your Google Drive File ID below to download the model.")
+
+    gdrive_input = st.text_input(
+        "Google Drive File ID",
+        value=st.session_state.get("gdrive_id", ""),
+        placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs...",
+        help="From share link: drive.google.com/file/d/FILE_ID/view"
+    )
+    if gdrive_input:
+        st.session_state["gdrive_id"] = gdrive_input
+
+    if st.button("Download & Load Model", use_container_width=True):
+        st.cache_resource.clear()
+        st.rerun()
+
+    st.markdown("---")
+    st.caption("**How to get File ID:**")
+    st.caption("1. Upload model to Google Drive")
+    st.caption("2. Right-click > Share > Anyone with link")
+    st.caption("3. Copy the ID from the URL")
+    st.caption("URL: `.../file/d/**FILE_ID**/view`")
 
 # ====================== HERO BANNER ====================== #
 status_text = "MODEL ONLINE" if model else "MODEL OFFLINE"
