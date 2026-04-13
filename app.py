@@ -19,10 +19,10 @@ st.set_page_config(
 def load_my_model():
     try:
         model = keras.models.load_model(
-    "final_garbage_model.keras", 
-    compile=False, 
-    safe_mode=False
-)
+            "final_garbage_model.h5",   
+            compile=False, 
+            safe_mode=False
+        )
         return model
     except Exception as e:
         st.error(f"❌ Model load failed: {e}")
