@@ -1,11 +1,10 @@
 import streamlit as st
 import numpy as np
 import tensorflow as tf
-import tensorflow.keras as keras
 from PIL import Image
 import json
 import plotly.express as px
-import os
+
 # ====================== PAGE CONFIG ====================== #
 st.set_page_config(
     page_title="Waste Garbage Classification",
@@ -17,16 +16,20 @@ st.set_page_config(
 @st.cache_resource
 def load_my_model():
     try:
-        model = keras.models.load_model(
-            "clean_model.h5",
-            compile=False
-        )
+        class PatchedDense(tf.keras.layers.Dense):
+            def __init__(self, *args, **kwargs):
+                kwargs.pop('quantization_config', None)
+                super().__init__(*args, **kwargs)
+
+        with tf.keras.utils.custom_object_scope({'Dense': PatchedDense}):
+            model = tf.keras.models.load_model(
+                "clean_model.h5",
+                compile=False
+            )
         return model
     except Exception as e:
         st.error(f"❌ Model load failed: {e}")
         return None
-
-model = load_my_model()
 
 # ====================== CLASS NAMES ====================== #
 def load_class_names():
@@ -62,6 +65,7 @@ Upload an image or use your **Live Webcam** to detect waste type instantly.
 👉 Built using **MobileNetV2 + Transfer Learning** (Keras / TensorFlow)
 """)
 st.divider()
+
 # ====================== PREPROCESS ====================== #
 def preprocess_image(img: Image.Image) -> np.ndarray:
     img = img.resize((160, 160)).convert("RGB")
@@ -81,7 +85,7 @@ def predict(img: Image.Image):
         return "Error", 0.0, []
 
 # ====================== SHOW RESULTS ====================== #
-def show_results(image, source=""):
+def show_results(image):
     if model is None:
         st.error("❌ Model not loaded.")
         return
@@ -149,7 +153,7 @@ with tab2:
             image = Image.open(cam_image).convert("RGB")
             st.image(image, caption="Captured Image", width=280)
         with col2:
-            show_results(image, source="webcam")
+            show_results(image)
 
 # ====================== FOOTER ====================== #
 st.divider()
