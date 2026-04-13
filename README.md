@@ -1,97 +1,44 @@
-# ♻️ Waste Garbage Management System (AI)
+# ♻️ Waste Garbage Classification System (AI)
 
-An AI-powered web application that classifies waste images into multiple categories using Deep Learning.
+An AI-powered web application that classifies waste images into different categories using Deep Learning.
+
+Built with **TensorFlow, Keras, and Streamlit**, this project helps in smart waste management by identifying waste types from images or live camera input.
 
 ---
 
 ## 🚀 Features
 
-* 📤 Upload Image Detection
-* 📸 Camera-based Detection
-* 🔥 Top-3 AI Predictions
-* 📊 Probability Distribution Chart
-* 📈 Analytics Dashboard
-* 📂 History Tracking + CSV Export
-* ☁️ Auto Model Loading via Google Drive
+- 📤 Upload image for waste detection  
+- 📷 Live webcam detection  
+- 🔍 Top 3 predictions with confidence  
+- ⚡ Fast and lightweight UI (Streamlit)  
+- 🤖 Deep Learning model (MobileNetV2 - Transfer Learning)
 
 ---
 
-## 🧠 Tech Stack
+## 🧠 Classes Supported
 
-* **Frontend:** Streamlit
-* **Backend:** Python
-* **AI Model:** TensorFlow / Keras
-* **Visualization:** Plotly
-* **Deployment:** Streamlit Cloud
+- 🧴 Plastic  
+- 🔩 Metal  
+- 📄 Paper  
+- 📦 Cardboard  
+- 🍶 Glass (Green / White / Brown)  
+- 🔋 Battery  
+- 👕 Clothes  
+- 👟 Shoes  
+- 🌿 Biological  
+- 🗑️ Trash  
+
+---
+
+## 🛠️ Tech Stack
+
+- Python  
+- TensorFlow / Keras  
+- Streamlit  
+- NumPy  
+- Pillow  
 
 ---
 
 ## 📂 Project Structure
-
-```
-project/
-│
-├── app.py
-├── class_names.json
-├── requirements.txt
-└── README.md
-```
-
----
-
-## ⚙️ Setup Instructions
-
-### 1. Clone Repository
-
-```
-git clone https://github.com/your-username/your-repo.git
-cd your-repo
-```
-
-### 2. Install Dependencies
-
-```
-pip install -r requirements.txt
-```
-
-### 3. Run Application
-
-```
-streamlit run app.py
-```
-
----
-
-## 🔗 Model Handling
-
-The trained model is hosted on Google Drive and automatically downloaded at runtime using `gdown`.
-
----
-
-## 📊 Example Output
-
-* Waste Category Prediction
-* Confidence Score (%)
-* Top-3 Predictions
-* Probability Chart
-
----
-
-## 👨‍💻 Author
-
-Developed by **Ashish**
-
----
-
-## 🌱 Future Enhancements
-
-* Explainable AI (XAI)
-* Mobile optimization
-* Multi-user authentication
-* API integration
-
----
-
-## ⭐ Support
-
-If you like this project, give it a ⭐ on GitHub!
