@@ -6,6 +6,8 @@ from datetime import datetime
 import plotly.express as px
 from tensorflow.keras.models import load_model
 import json
+import gdown
+import os
 
 # ---------------- CONFIG ----------------
 st.set_page_config(
@@ -17,9 +19,13 @@ st.set_page_config(
 # ---------------- LOAD MODEL ----------------
 @st.cache_resource
 def load_my_model():
-    return load_model("final_garbage_model.keras")
-
-model = load_my_model()
+    model_path = "final_garbage_model.keras"
+    
+    if not os.path.exists(model_path):
+        url = "https://drive.google.com/uc?id=1YsShxgnuv29JCmkvMNx4Gq7wu4qxg3X7"
+        gdown.download(url, model_path, quiet=False)
+    
+    return load_model(model_path)
 
 # ---------------- LOAD CLASS LABELS ----------------
 @st.cache_resource
