@@ -327,12 +327,28 @@ if "class_names" not in st.session_state:
     st.session_state.class_names = []
 
 # ====================== LOAD MODEL ====================== #
-MODEL_PATH  = "final_garbage_model.keras"
-CLASS_PATH  = "class_names.json"
+# ---- Resolve absolute paths relative to this script ---- #
+BASE_DIR   = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH = os.path.join(BASE_DIR, "final_garbage_model.keras")
+CLASS_PATH = os.path.join(BASE_DIR, "class_names.json")
 
 @st.cache_resource
 def load_my_model():
+    # Debug: show what files Streamlit can actually see
+    try:
+        all_files = os.listdir(BASE_DIR)
+    except Exception:
+        all_files = []
+    keras_files = [f for f in all_files if f.endswith(".keras") or f.endswith(".h5")]
+
     if not os.path.exists(MODEL_PATH):
+        # Try to find any .keras or .h5 file in the directory
+        if keras_files:
+            alt_path = os.path.join(BASE_DIR, keras_files[0])
+            try:
+                return load_model(alt_path, compile=False)
+            except Exception:
+                pass
         return None
     try:
         return load_model(MODEL_PATH, compile=False)
@@ -359,6 +375,21 @@ def load_class_names():
 
 model       = load_my_model()
 class_names = load_class_names()
+
+
+# ---- Sidebar debug info ---- #
+with st.sidebar:
+    st.markdown("### Debug Info")
+    st.code("BASE_DIR: " + str(BASE_DIR))
+    try:
+        files = os.listdir(BASE_DIR)
+        file_list = chr(10).join(sorted(files))
+        st.code("Files found:" + chr(10) + file_list)
+    except Exception as e:
+        st.error("Cannot list dir: " + str(e))
+    st.write("Model exists:", os.path.exists(MODEL_PATH))
+    st.write("JSON exists:", os.path.exists(CLASS_PATH))
+    st.caption("Remove this sidebar after fixing")
 
 # ====================== HERO BANNER ====================== #
 status_text = "MODEL ONLINE" if model else "MODEL OFFLINE"
