@@ -35,13 +35,17 @@ def load_my_model():
 def load_class_names():
     try:
         with open("class_names.json", "r") as f:
-            return json.load(f)
+            data = json.load(f)
+
+            if isinstance(data, dict):
+        
+                data = [k for k, v in sorted(data.items(), key=lambda x: x[1])]
+
+            return data
+
     except Exception as e:
         st.error(f"❌ class_names.json load failed: {e}")
         return []
-
-model = load_my_model()
-class_names = load_class_names()
 
 # ====================== SIDEBAR ====================== #
 st.sidebar.title("⚙️ Menu")
