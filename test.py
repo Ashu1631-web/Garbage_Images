@@ -345,7 +345,15 @@ def load_class_names():
         return []
     try:
         with open(CLASS_PATH) as f:
-            return json.load(f)
+            data = json.load(f)
+        if isinstance(data, list):
+            return [str(c) for c in data]
+        elif isinstance(data, dict):
+            try:
+                return [str(data[k]) for k in sorted(data.keys(), key=lambda x: int(x))]
+            except Exception:
+                return [str(v) for v in data.values()]
+        return []
     except Exception:
         return []
 
@@ -583,19 +591,35 @@ with info_col2:
     """, unsafe_allow_html=True)
 
 with info_col3:
-    names_str = " · ".join(class_names[:6]) + (" · …" if len(class_names) > 6 else "")
-    st.markdown(f"""
-    <div style="background:var(--surface);border:1px solid var(--border);
-                border-radius:10px;padding:16px 20px;">
-        <div style="font-family:'Space Mono',monospace;font-size:0.6rem;
-                    letter-spacing:2px;color:var(--muted);text-transform:uppercase;
-                    margin-bottom:6px;">Classes ({len(class_names)})</div>
-        <div style="font-family:'Space Mono',monospace;font-size:0.68rem;
-                    color:var(--muted);line-height:1.6;">
-            {names_str if names_str else "Loading..."}
+    try:
+        safe_names = [str(c) for c in class_names[:6]]
+        names_str  = " | ".join(safe_names)
+        if len(class_names) > 6:
+            names_str += " | ..."
+        if not names_str:
+            names_str = "Loading..."
+        total_cls = len(class_names)
+    except Exception:
+        names_str = "Loading..."
+        total_cls = 0
+
+    st.markdown(
+        """
+        <div style="background:var(--surface);border:1px solid var(--border);
+                    border-radius:10px;padding:16px 20px;">
+            <div style="font-family:'Space Mono',monospace;font-size:0.6rem;
+                        letter-spacing:2px;color:var(--muted);text-transform:uppercase;
+                        margin-bottom:6px;">Classes ("""
+        + str(total_cls)
+        + """)</div>
+            <div style="font-family:'Space Mono',monospace;font-size:0.68rem;
+                        color:var(--muted);line-height:1.6;">"""
+        + names_str
+        + """</div>
         </div>
-    </div>
-    """, unsafe_allow_html=True)
+        """,
+        unsafe_allow_html=True,
+    )
 
 # ====================== FOOTER ====================== #
 st.markdown("""
