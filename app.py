@@ -29,6 +29,9 @@ html, body, [data-testid="stAppViewContainer"] {
     font-family: 'Rajdhani', sans-serif;
 }
 
+/* FIX 1: Hide default sidebar collapse arrow & waste list overflow */
+[data-testid="stSidebarNav"] { display: none !important; }
+
 .page-heading {
     font-family: 'Orbitron', monospace;
     font-size: 1.8rem;
@@ -90,6 +93,23 @@ html, body, [data-testid="stAppViewContainer"] {
     text-align: center;
     text-shadow: 0 0 18px #00ff8877;
 }
+
+/* FIX 3: Side-by-side graph pair divider — clean line, no VS circle */
+.graph-pair-divider {
+    width: 2px;
+    background: linear-gradient(to bottom, transparent, #00ff8833, #00ff8866, #00ff8833, transparent);
+    border-radius: 4px;
+    align-self: stretch;
+    min-height: 300px;
+    margin: 0 8px;
+}
+.graph-pair-wrapper {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin-bottom: 16px;
+}
+
 hr { border-color: #1a3a1a; }
 </style>
 """, unsafe_allow_html=True)
@@ -102,7 +122,6 @@ if "active_page" not in st.session_state: st.session_state.active_page = "Projec
 USERS = {"admin": "1234", "user1": "green2024", "demo": "demo"}
 
 def login_page():
-    # Full-page background image with dark overlay
     st.markdown("""
     <style>
     [data-testid="stAppViewContainer"] {
@@ -117,7 +136,6 @@ def login_page():
     </style>
     """, unsafe_allow_html=True)
 
-    # Small logo card — centered
     _, mid, _ = st.columns([1, 1.4, 1])
     with mid:
         st.markdown("""
@@ -206,6 +224,8 @@ def _rgb_channel(img_array, ch: int):
     return counts, bins
 
 # ====================== 10 GRAPHS ====================== #
+# FIX 2 & 3: All graphs render FULL WIDTH below upload section.
+#             Graph pairs are side-by-side with a clean divider line — no VS circle.
 def show_all_graphs(image: Image.Image, label, confidence, top3, all_preds, class_names):
 
     st.markdown(f'<div class="pred-badge">✅ PREDICTED: {label.upper()}</div>', unsafe_allow_html=True)
@@ -223,8 +243,8 @@ def show_all_graphs(image: Image.Image, label, confidence, top3, all_preds, clas
     st.markdown('<div class="graph-section">📊 PREDICTION GRAPHS — 10 VISUALIZATIONS</div>',
                 unsafe_allow_html=True)
 
-    # Graph 1 & 2
-    c1, c2 = st.columns(2)
+    # ── Graph 1 & 2 side-by-side with clean divider (no VS circle) ──
+    c1, cdiv1, c2 = st.columns([10, 0.08, 10])
     with c1:
         labels_top3 = [x[0] for x in top3]
         vals_top3   = [round(x[1]*100, 2) for x in top3]
@@ -234,8 +254,16 @@ def show_all_graphs(image: Image.Image, label, confidence, top3, all_preds, clas
             text=[f"{v}%" for v in vals_top3], textposition="auto"
         ))
         fig1.update_layout(title="📊 Graph 1 — Top 3 Confidence (Horizontal Bar)",
-                           xaxis_title="Confidence %", template="plotly_dark", height=300)
+                           xaxis_title="Confidence %", template="plotly_dark", height=320)
         st.plotly_chart(fig1, use_container_width=True)
+
+    with cdiv1:
+        st.markdown("""
+        <div style="width:2px; min-height:320px;
+                    background: linear-gradient(to bottom,
+                        transparent, #00ff8844, #00ff8888, #00ff8844, transparent);
+                    border-radius:4px; margin:auto;">
+        </div>""", unsafe_allow_html=True)
 
     with c2:
         pie_vals = [round(float(p)*100, 2) for p in all_preds]
@@ -245,11 +273,13 @@ def show_all_graphs(image: Image.Image, label, confidence, top3, all_preds, clas
             marker=dict(colors=px.colors.qualitative.Safe)
         ))
         fig2.update_layout(title="🥧 Graph 2 — All Classes Probability (Pie Chart)",
-                           template="plotly_dark", height=300)
+                           template="plotly_dark", height=320)
         st.plotly_chart(fig2, use_container_width=True)
 
-    # Graph 3 & 4
-    c3, c4 = st.columns(2)
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+
+    # ── Graph 3 & 4 side-by-side ──
+    c3, cdiv2, c4 = st.columns([10, 0.08, 10])
     with c3:
         fig3 = go.Figure(go.Indicator(
             mode="gauge+number+delta",
@@ -266,8 +296,16 @@ def show_all_graphs(image: Image.Image, label, confidence, top3, all_preds, clas
                 "threshold": {"line": {"color": "white","width": 3},"thickness": 0.75,"value": 70}
             }
         ))
-        fig3.update_layout(template="plotly_dark", height=300)
+        fig3.update_layout(template="plotly_dark", height=320)
         st.plotly_chart(fig3, use_container_width=True)
+
+    with cdiv2:
+        st.markdown("""
+        <div style="width:2px; min-height:320px;
+                    background: linear-gradient(to bottom,
+                        transparent, #00ff8844, #00ff8888, #00ff8844, transparent);
+                    border-radius:4px; margin:auto;">
+        </div>""", unsafe_allow_html=True)
 
     with c4:
         top6_idx     = all_preds.argsort()[-6:][::-1]
@@ -280,12 +318,14 @@ def show_all_graphs(image: Image.Image, label, confidence, top3, all_preds, clas
         ))
         fig4.update_layout(title="🕸️ Graph 4 — Top-6 Radar Chart",
                            polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
-                           template="plotly_dark", height=300)
+                           template="plotly_dark", height=320)
         st.plotly_chart(fig4, use_container_width=True)
 
-    # Graph 5 & 6
-    c5, c6 = st.columns(2)
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+
+    # ── Graph 5 & 6 side-by-side ──
     img_array = np.array(image.resize((160, 160)).convert("RGB"))
+    c5, cdiv3, c6 = st.columns([10, 0.08, 10])
     with c5:
         fig5 = go.Figure()
         for ch_idx, (color, channel) in enumerate(zip(["red","green","blue"],["Red","Green","Blue"])):
@@ -297,18 +337,28 @@ def show_all_graphs(image: Image.Image, label, confidence, top3, all_preds, clas
             ))
         fig5.update_layout(title="📊 Graph 5 — RGB Channel Distribution",
                            xaxis_title="Pixel Value (0–255)", yaxis_title="Frequency",
-                           template="plotly_dark", height=300, legend=dict(orientation="h"))
+                           template="plotly_dark", height=320, legend=dict(orientation="h"))
         st.plotly_chart(fig5, use_container_width=True)
+
+    with cdiv3:
+        st.markdown("""
+        <div style="width:2px; min-height:320px;
+                    background: linear-gradient(to bottom,
+                        transparent, #00ff8844, #00ff8888, #00ff8844, transparent);
+                    border-radius:4px; margin:auto;">
+        </div>""", unsafe_allow_html=True)
 
     with c6:
         img_gray = np.array(image.resize((80, 80)).convert("L"))
         fig6 = go.Figure(data=go.Heatmap(z=img_gray, colorscale="Viridis", showscale=True))
         fig6.update_layout(title="🌡️ Graph 6 — Pixel Intensity Heatmap",
-                           template="plotly_dark", height=300,
+                           template="plotly_dark", height=320,
                            yaxis=dict(autorange="reversed"))
         st.plotly_chart(fig6, use_container_width=True)
 
-    # Graph 7 — Bar chart per class (replaces Violin to avoid fillcolor ValueError)
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+
+    # ── Graph 7 — Full width ──
     sorted_bar_idx  = all_preds.argsort()[::-1]
     bar7_labels     = [class_names[i] for i in sorted_bar_idx]
     bar7_vals       = [round(float(all_preds[i])*100, 4) for i in sorted_bar_idx]
@@ -326,8 +376,10 @@ def show_all_graphs(image: Image.Image, label, confidence, top3, all_preds, clas
     )
     st.plotly_chart(fig7, use_container_width=True)
 
-    # Graph 8 & 9
-    c8, c9 = st.columns(2)
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+
+    # ── Graph 8 & 9 side-by-side ──
+    c8, cdiv4, c9 = st.columns([10, 0.08, 10])
     with c8:
         sorted_idx = all_preds.argsort()[::-1]
         all_labels = [class_names[i] for i in sorted_idx]
@@ -343,6 +395,14 @@ def show_all_graphs(image: Image.Image, label, confidence, top3, all_preds, clas
                            template="plotly_dark", height=340)
         st.plotly_chart(fig8, use_container_width=True)
 
+    with cdiv4:
+        st.markdown("""
+        <div style="width:2px; min-height:340px;
+                    background: linear-gradient(to bottom,
+                        transparent, #00ff8844, #00ff8888, #00ff8844, transparent);
+                    border-radius:4px; margin:auto;">
+        </div>""", unsafe_allow_html=True)
+
     with c9:
         tree_vals = [max(float(p)*100, 0.01) for p in all_preds]
         fig9 = go.Figure(go.Treemap(
@@ -356,7 +416,9 @@ def show_all_graphs(image: Image.Image, label, confidence, top3, all_preds, clas
                            template="plotly_dark", height=340)
         st.plotly_chart(fig9, use_container_width=True)
 
-    # Graph 10 — Waterfall
+    st.markdown("<div style='height:8px'></div>", unsafe_allow_html=True)
+
+    # ── Graph 10 — Full width ──
     sorted_idx2 = all_preds.argsort()[::-1]
     wf_labels   = [class_names[i] for i in sorted_idx2]
     wf_vals     = [round(float(all_preds[i])*100, 2) for i in sorted_idx2]
@@ -451,47 +513,56 @@ def page_overview(class_names):
 
 
 # ====================== DETECTION PAGE ====================== #
+# FIX 2: Upload section compact at top. Graphs display FULL WIDTH below — no cramping.
 def detection_page(mode: str, model, class_names):
     if mode == "upload":
         st.markdown('<div class="page-heading">📤 UPLOAD IMAGE</div>', unsafe_allow_html=True)
         st.markdown('<div class="page-sub">Upload a waste image to classify and visualize with 10 graphs</div>',
                     unsafe_allow_html=True)
 
-        col1, col2 = st.columns(2)
-        with col1:
+        # ── Upload section: image uploader + preview side by side ──
+        col_up, col_prev = st.columns([1, 1])
+        with col_up:
             uploaded_file = st.file_uploader("Upload waste image", type=["jpg", "jpeg", "png"])
             if uploaded_file:
-                image = Image.open(uploaded_file).convert("RGB")
-                st.image(image, caption="Uploaded Image", use_column_width=True)
                 detect_btn = st.button("🔍 Detect Waste", use_container_width=True)
             else:
                 detect_btn = False
-
-        with col2:
-            if uploaded_file and detect_btn:
-                with st.spinner("🔬 Analyzing image..."):
-                    lbl, conf, top3, all_preds = predict(image, model, class_names)
-                show_all_graphs(image, lbl, conf, top3, all_preds, class_names)
-            elif not uploaded_file:
                 st.info("👈 Upload an image to begin waste detection.")
+
+        with col_prev:
+            if uploaded_file:
+                image = Image.open(uploaded_file).convert("RGB")
+                st.image(image, caption="Uploaded Image", use_column_width=True)
+
+        # ── Graphs FULL WIDTH below ──
+        if uploaded_file and detect_btn:
+            st.markdown("---")
+            with st.spinner("🔬 Analyzing image..."):
+                lbl, conf, top3, all_preds = predict(image, model, class_names)
+            show_all_graphs(image, lbl, conf, top3, all_preds, class_names)
 
     else:  # webcam
         st.markdown('<div class="page-heading">📷 LIVE WEBCAM</div>', unsafe_allow_html=True)
         st.markdown('<div class="page-sub">Use your camera to detect waste type in real-time with 10 graphs</div>',
                     unsafe_allow_html=True)
 
-        col1, col2 = st.columns(2)
-        with col1:
+        # ── Camera section: input + preview side by side ──
+        col_cam, col_cprev = st.columns([1, 1])
+        with col_cam:
             cam_image = st.camera_input("Point camera at waste item")
+
+        with col_cprev:
             if cam_image:
                 image = Image.open(cam_image).convert("RGB")
                 st.image(image, caption="Captured Image", use_column_width=True)
 
-        with col2:
-            if cam_image:
-                with st.spinner("🔬 Analyzing..."):
-                    lbl, conf, top3, all_preds = predict(image, model, class_names)
-                show_all_graphs(image, lbl, conf, top3, all_preds, class_names)
+        # ── Graphs FULL WIDTH below ──
+        if cam_image:
+            st.markdown("---")
+            with st.spinner("🔬 Analyzing..."):
+                lbl, conf, top3, all_preds = predict(image, model, class_names)
+            show_all_graphs(image, lbl, conf, top3, all_preds, class_names)
 
 
 # ====================== MAIN APP ====================== #
@@ -525,11 +596,7 @@ def main_app():
                 st.session_state.active_page = key
                 st.rerun()
 
-        st.markdown("---")
-        st.markdown("**🗑️ Waste Types**")
-        for name in class_names:
-            st.write(f"• {name}")
-
+        # FIX 1: "Waste Types" list REMOVED from sidebar — only model status & logout remain
         st.markdown("---")
         if model:
             st.success("✅ Model Ready")
