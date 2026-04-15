@@ -99,7 +99,7 @@ if "logged_in"   not in st.session_state: st.session_state.logged_in   = False
 if "active_page" not in st.session_state: st.session_state.active_page = "Project Overview"
 
 # ====================== AUTH ====================== #
-USERS = {"admin": "waste123", "user1": "green2024", "demo": "demo"}
+USERS = {"admin": "1234", "user1": "green2024", "demo": "demo"}
 
 def login_page():
     # Full-page background image with dark overlay
