@@ -17,80 +17,18 @@ st.set_page_config(
 # ====================== CUSTOM CSS ====================== #
 st.markdown("""
 <style>
-/* ── Google Fonts ── */
 @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&family=Rajdhani:wght@400;600&display=swap');
 
-/* ── Hide default Streamlit elements ── */
 #MainMenu {visibility: hidden;}
 footer    {visibility: hidden;}
 header    {visibility: hidden;}
 
-/* ── Global body ── */
 html, body, [data-testid="stAppViewContainer"] {
     background-color: #0a0f0a;
     color: #e0ffe0;
     font-family: 'Rajdhani', sans-serif;
 }
 
-/* ── LOGIN PAGE background overlay ── */
-.login-bg {
-    position: fixed;
-    inset: 0;
-    background:
-        linear-gradient(135deg, rgba(0,30,0,0.92) 0%, rgba(0,60,20,0.88) 100%),
-        url('https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=1600&q=80') center/cover no-repeat;
-    z-index: 0;
-}
-
-/* ── Login card ── */
-.login-card {
-    position: relative;
-    z-index: 1;
-    background: rgba(10,30,15,0.85);
-    border: 1px solid #00ff88;
-    border-radius: 18px;
-    padding: 48px 40px;
-    max-width: 420px;
-    margin: 80px auto;
-    box-shadow: 0 0 60px rgba(0,255,136,0.15), 0 0 120px rgba(0,255,136,0.05);
-    backdrop-filter: blur(12px);
-}
-.login-title {
-    font-family: 'Orbitron', monospace;
-    font-size: 1.6rem;
-    color: #00ff88;
-    text-align: center;
-    letter-spacing: 2px;
-    margin-bottom: 8px;
-    text-shadow: 0 0 20px #00ff88aa;
-}
-.login-sub {
-    text-align: center;
-    color: #88cc99;
-    font-size: 0.95rem;
-    margin-bottom: 32px;
-    font-family: 'Rajdhani', sans-serif;
-}
-
-/* ── Sidebar nav button active ── */
-div[data-testid="stSidebar"] button {
-    width: 100%;
-    text-align: left;
-    background: transparent;
-    border: none;
-    color: #b0ffcc;
-    font-family: 'Rajdhani', sans-serif;
-    font-size: 1rem;
-    padding: 10px 16px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-div[data-testid="stSidebar"] button:hover {
-    background: rgba(0,255,136,0.12);
-}
-
-/* ── Page heading ── */
 .page-heading {
     font-family: 'Orbitron', monospace;
     font-size: 1.8rem;
@@ -104,64 +42,54 @@ div[data-testid="stSidebar"] button:hover {
     font-size: 1rem;
     margin-bottom: 24px;
 }
-
-/* ── Overview cards ── */
 .ov-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 18px;
-    margin: 24px 0;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin: 20px 0;
 }
 .ov-card {
     background: linear-gradient(135deg, rgba(0,60,30,0.7), rgba(0,30,15,0.9));
     border: 1px solid #00ff8840;
     border-radius: 14px;
-    padding: 22px 20px;
+    padding: 20px 16px;
     text-align: center;
     transition: transform 0.2s, border-color 0.2s;
 }
-.ov-card:hover {
-    transform: translateY(-4px);
-    border-color: #00ff88aa;
-}
-.ov-card .icon  { font-size: 2.4rem; }
-.ov-card .label { font-family: 'Rajdhani', sans-serif; font-size: 1rem; color: #aaddbb; margin-top: 8px; }
-.ov-card .val   { font-family: 'Orbitron', monospace; font-size: 1.3rem; color: #00ff88; margin-top: 4px; }
+.ov-card:hover { transform: translateY(-4px); border-color: #00ff88aa; }
+.ov-card .icon  { font-size: 2.2rem; }
+.ov-card .label { font-size: 0.9rem; color: #aaddbb; margin-top: 6px; }
+.ov-card .val   { font-family: 'Orbitron', monospace; font-size: 1.2rem; color: #00ff88; margin-top: 4px; }
 
-/* ── Graph section label ── */
 .graph-section {
     font-family: 'Orbitron', monospace;
     color: #00ff88;
-    font-size: 1rem;
+    font-size: 1.05rem;
     letter-spacing: 1px;
-    margin: 20px 0 8px;
-    padding-left: 4px;
+    margin: 20px 0 10px;
+    padding-left: 8px;
     border-left: 3px solid #00ff88;
 }
-
-/* ── Prediction badge ── */
 .pred-badge {
     background: linear-gradient(90deg, #00ff88, #00cc66);
     color: #002210;
     font-family: 'Orbitron', monospace;
-    font-size: 1.4rem;
+    font-size: 1.3rem;
     font-weight: 700;
-    padding: 16px 28px;
+    padding: 14px 24px;
     border-radius: 12px;
     text-align: center;
     letter-spacing: 2px;
-    box-shadow: 0 0 30px #00ff8855;
-    margin-bottom: 12px;
+    box-shadow: 0 0 28px #00ff8855;
+    margin-bottom: 10px;
 }
 .conf-val {
     font-family: 'Orbitron', monospace;
-    font-size: 2.4rem;
+    font-size: 2.2rem;
     color: #00ff88;
     text-align: center;
-    text-shadow: 0 0 20px #00ff8877;
+    text-shadow: 0 0 18px #00ff8877;
 }
-
-/* ── Divider ── */
 hr { border-color: #1a3a1a; }
 </style>
 """, unsafe_allow_html=True)
@@ -174,21 +102,49 @@ if "active_page" not in st.session_state: st.session_state.active_page = "Projec
 USERS = {"admin": "waste123", "user1": "green2024", "demo": "demo"}
 
 def login_page():
-    st.markdown('<div class="login-bg"></div>', unsafe_allow_html=True)
+    # Full-page background image with dark overlay
     st.markdown("""
-    <div class="login-card">
-        <div class="login-title">♻️ WASTE AI</div>
-        <div class="login-sub">Waste Garbage Classification System<br>Powered by MobileNetV2 + Transfer Learning</div>
-    </div>
+    <style>
+    [data-testid="stAppViewContainer"] {
+        background:
+            linear-gradient(rgba(0,0,0,0.48), rgba(0,0,0,0.55)),
+            url('https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=1600&q=80')
+            center/cover no-repeat fixed !important;
+    }
+    [data-testid="stMain"]          { background: transparent !important; }
+    [data-testid="stSidebar"]       { display: none !important; }
+    section[data-testid="stMainBlockContainer"] { padding-top: 48px !important; }
+    </style>
     """, unsafe_allow_html=True)
 
-    col = st.columns([1, 2, 1])[1]
-    with col:
-        st.markdown("###")
-        with st.container():
-            uname  = st.text_input("👤 Username", placeholder="Enter username")
-            passwd = st.text_input("🔒 Password", type="password", placeholder="Enter password")
-            login  = st.button("🚀 LOGIN", use_container_width=True)
+    # Small logo card — centered
+    _, mid, _ = st.columns([1, 1.4, 1])
+    with mid:
+        st.markdown("""
+        <div style="
+            background: rgba(5,20,10,0.82);
+            border: 1px solid #00ff88;
+            border-radius: 14px;
+            padding: 22px 32px 16px;
+            text-align: center;
+            box-shadow: 0 0 40px rgba(0,255,136,0.18);
+            backdrop-filter: blur(14px);
+            margin-bottom: 22px;
+        ">
+            <div style="font-family:Orbitron,monospace; font-size:1.4rem; color:#00ff88;
+                        letter-spacing:3px; text-shadow:0 0 18px #00ff88aa;">
+                ♻️ WASTE AI
+            </div>
+            <div style="color:#88cc99; font-size:0.83rem; margin-top:6px; line-height:1.55;">
+                Waste Garbage Classification System<br>
+                Powered by MobileNetV2 + Transfer Learning
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        uname  = st.text_input("👤 Username", placeholder="Enter username")
+        passwd = st.text_input("🔒 Password", type="password", placeholder="Enter password")
+        login  = st.button("🚀  LOGIN", use_container_width=True)
 
         if login:
             if uname in USERS and USERS[uname] == passwd:
@@ -198,14 +154,7 @@ def login_page():
             else:
                 st.error("❌ Invalid username or password!")
 
-        st.markdown("---")
-        st.markdown("""
-        <div style='text-align:center; color:#559966; font-size:0.85rem;'>
-        🔑 Demo → username: <b>demo</b> &nbsp;|&nbsp; password: <b>demo</b>
-        </div>
-        """, unsafe_allow_html=True)
-
-# ====================== MODEL LOAD ====================== #
+# ====================== MODEL ====================== #
 @st.cache_resource
 def load_my_model():
     try:
@@ -251,13 +200,18 @@ def predict(img: Image.Image, model, class_names):
         st.error(f"⚠️ Prediction Error: {str(e)}")
         return "Error", 0.0, [], np.zeros(len(class_names))
 
-# ====================== ALL 10 GRAPHS ====================== #
+# ====================== RGB helper ====================== #
+def _rgb_channel(img_array, ch: int):
+    counts, bins = np.histogram(img_array[:, :, ch].flatten(), bins=64, range=(0, 255))
+    return counts, bins
+
+# ====================== 10 GRAPHS ====================== #
 def show_all_graphs(image: Image.Image, label, confidence, top3, all_preds, class_names):
 
-    # ── Result header ──────────────────────────────────── #
     st.markdown(f'<div class="pred-badge">✅ PREDICTED: {label.upper()}</div>', unsafe_allow_html=True)
     st.markdown(f'<div class="conf-val">{round(confidence*100,2)}%</div>', unsafe_allow_html=True)
-    st.markdown("<div style='text-align:center;color:#88aa99;margin-bottom:16px;'>Confidence Score</div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align:center;color:#88aa99;margin-bottom:14px;'>Confidence Score</div>",
+                unsafe_allow_html=True)
 
     st.markdown("---")
     st.markdown("### 🔥 Top 3 Predictions")
@@ -266,13 +220,14 @@ def show_all_graphs(image: Image.Image, label, confidence, top3, all_preds, clas
         st.progress(float(prob))
 
     st.markdown("---")
-    st.markdown('<div class="graph-section">📊 PREDICTION GRAPHS — 10 VISUALIZATIONS</div>', unsafe_allow_html=True)
+    st.markdown('<div class="graph-section">📊 PREDICTION GRAPHS — 10 VISUALIZATIONS</div>',
+                unsafe_allow_html=True)
 
-    # GRAPH 1 & 2
+    # Graph 1 & 2
     c1, c2 = st.columns(2)
     with c1:
         labels_top3 = [x[0] for x in top3]
-        vals_top3   = [round(x[1]*100,2) for x in top3]
+        vals_top3   = [round(x[1]*100, 2) for x in top3]
         fig1 = go.Figure(go.Bar(
             x=vals_top3, y=labels_top3, orientation="h",
             marker=dict(color=vals_top3, colorscale="Teal", showscale=False),
@@ -283,7 +238,7 @@ def show_all_graphs(image: Image.Image, label, confidence, top3, all_preds, clas
         st.plotly_chart(fig1, use_container_width=True)
 
     with c2:
-        pie_vals = [round(float(p)*100,2) for p in all_preds]
+        pie_vals = [round(float(p)*100, 2) for p in all_preds]
         fig2 = go.Figure(go.Pie(
             labels=class_names, values=pie_vals, hole=0.35,
             textinfo="label+percent",
@@ -293,7 +248,7 @@ def show_all_graphs(image: Image.Image, label, confidence, top3, all_preds, clas
                            template="plotly_dark", height=300)
         st.plotly_chart(fig2, use_container_width=True)
 
-    # GRAPH 3 & 4
+    # Graph 3 & 4
     c3, c4 = st.columns(2)
     with c3:
         fig3 = go.Figure(go.Indicator(
@@ -301,12 +256,12 @@ def show_all_graphs(image: Image.Image, label, confidence, top3, all_preds, clas
             value=round(confidence*100, 2),
             title={"text": f"🎯 Graph 3 — Confidence Gauge<br>{label.upper()}"},
             gauge={
-                "axis": {"range": [0,100]},
+                "axis": {"range": [0, 100]},
                 "bar":  {"color": "#00cc96"},
                 "steps": [
-                    {"range": [0,40],  "color": "#ef553b"},
-                    {"range": [40,70], "color": "#ffa15a"},
-                    {"range": [70,100],"color": "#00cc96"},
+                    {"range": [0,  40], "color": "#ef553b"},
+                    {"range": [40, 70], "color": "#ffa15a"},
+                    {"range": [70,100], "color": "#00cc96"},
                 ],
                 "threshold": {"line": {"color": "white","width": 3},"thickness": 0.75,"value": 70}
             }
@@ -315,65 +270,72 @@ def show_all_graphs(image: Image.Image, label, confidence, top3, all_preds, clas
         st.plotly_chart(fig3, use_container_width=True)
 
     with c4:
-        top6_idx = all_preds.argsort()[-6:][::-1]
+        top6_idx     = all_preds.argsort()[-6:][::-1]
         radar_labels = [class_names[i] for i in top6_idx]
-        radar_vals   = [round(float(all_preds[i])*100,2) for i in top6_idx]
+        radar_vals   = [round(float(all_preds[i])*100, 2) for i in top6_idx]
         fig4 = go.Figure(go.Scatterpolar(
-            r=radar_vals+[radar_vals[0]],
-            theta=radar_labels+[radar_labels[0]],
-            fill="toself", line=dict(color="#636efa",width=2)
+            r=radar_vals + [radar_vals[0]],
+            theta=radar_labels + [radar_labels[0]],
+            fill="toself", line=dict(color="#636efa", width=2)
         ))
         fig4.update_layout(title="🕸️ Graph 4 — Top-6 Radar Chart",
-                           polar=dict(radialaxis=dict(visible=True,range=[0,100])),
+                           polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
                            template="plotly_dark", height=300)
         st.plotly_chart(fig4, use_container_width=True)
 
-    # GRAPH 5 & 6
+    # Graph 5 & 6
     c5, c6 = st.columns(2)
+    img_array = np.array(image.resize((160, 160)).convert("RGB"))
     with c5:
-        img_array = np.array(image.resize((160,160)).convert("RGB"))
         fig5 = go.Figure()
-        for i, (color, channel) in enumerate(zip(["red","green","blue"],["Red","Green","Blue"])):
-            counts, bins = np.histogram(img_array[:,:,i].flatten(), bins=64, range=(0,255))
-            fig5.add_trace(go.Scatter(x=bins[:-1], y=counts, mode="lines",
-                fill="tozeroy", name=channel, line=dict(color=color,width=1.5), opacity=0.6))
+        for ch_idx, (color, channel) in enumerate(zip(["red","green","blue"],["Red","Green","Blue"])):
+            counts, bins = _rgb_channel(img_array, ch_idx)
+            fig5.add_trace(go.Scatter(
+                x=bins[:-1], y=counts, mode="lines",
+                fill="tozeroy", name=channel,
+                line=dict(color=color, width=1.5), opacity=0.6
+            ))
         fig5.update_layout(title="📊 Graph 5 — RGB Channel Distribution",
                            xaxis_title="Pixel Value (0–255)", yaxis_title="Frequency",
                            template="plotly_dark", height=300, legend=dict(orientation="h"))
         st.plotly_chart(fig5, use_container_width=True)
 
     with c6:
-        img_gray = np.array(image.resize((80,80)).convert("L"))
+        img_gray = np.array(image.resize((80, 80)).convert("L"))
         fig6 = go.Figure(data=go.Heatmap(z=img_gray, colorscale="Viridis", showscale=True))
         fig6.update_layout(title="🌡️ Graph 6 — Pixel Intensity Heatmap",
                            template="plotly_dark", height=300,
                            yaxis=dict(autorange="reversed"))
         st.plotly_chart(fig6, use_container_width=True)
 
-    # GRAPH 7 — Violin / Distribution of all class probabilities
-    fig7 = go.Figure()
-    fig7.add_trace(go.Violin(
-        y=[float(p)*100 for p in all_preds],
-        x=class_names,
-        points="all",
-        box_visible=True,
-        meanline_visible=True,
-        fillcolor="#00cc9655",
-        line_color="#00cc96"
+    # Graph 7 — Bar chart per class (replaces Violin to avoid fillcolor ValueError)
+    sorted_bar_idx  = all_preds.argsort()[::-1]
+    bar7_labels     = [class_names[i] for i in sorted_bar_idx]
+    bar7_vals       = [round(float(all_preds[i])*100, 4) for i in sorted_bar_idx]
+    bar7_colors     = ["#00ff88" if class_names[i] == label else "#2196f3" for i in sorted_bar_idx]
+    fig7 = go.Figure(go.Bar(
+        x=bar7_labels, y=bar7_vals,
+        marker_color=bar7_colors,
+        text=[f"{v:.2f}%" for v in bar7_vals],
+        textposition="outside"
     ))
-    fig7.update_layout(title="🎻 Graph 7 — Probability Distribution (Violin Plot)",
-                       yaxis_title="Confidence %", template="plotly_dark", height=340)
+    fig7.update_layout(
+        title="📊 Graph 7 — All Classes Probability Distribution (Green = Predicted)",
+        xaxis_title="Waste Class", yaxis_title="Confidence %",
+        template="plotly_dark", height=340
+    )
     st.plotly_chart(fig7, use_container_width=True)
 
-    # GRAPH 8 & 9
+    # Graph 8 & 9
     c8, c9 = st.columns(2)
     with c8:
         sorted_idx = all_preds.argsort()[::-1]
         all_labels = [class_names[i] for i in sorted_idx]
-        all_vals   = [round(float(all_preds[i])*100,2) for i in sorted_idx]
-        bar_colors = ["#00ff88" if l==label else "#636efa" for l in all_labels]
+        all_vals   = [round(float(all_preds[i])*100, 2) for i in sorted_idx]
+        bar_colors = ["#00ff88" if l == label else "#636efa" for l in all_labels]
         fig8 = go.Figure(go.Bar(
-            x=all_labels, y=all_vals, marker_color=bar_colors,
+            x=all_labels, y=all_vals,
+            marker_color=bar_colors,
             text=[f"{v}%" for v in all_vals], textposition="outside"
         ))
         fig8.update_layout(title="📊 Graph 8 — All Classes Ranked (Green = Predicted)",
@@ -382,11 +344,10 @@ def show_all_graphs(image: Image.Image, label, confidence, top3, all_preds, clas
         st.plotly_chart(fig8, use_container_width=True)
 
     with c9:
-        tree_labels = class_names
-        tree_vals   = [max(float(p)*100, 0.01) for p in all_preds]
+        tree_vals = [max(float(p)*100, 0.01) for p in all_preds]
         fig9 = go.Figure(go.Treemap(
-            labels=tree_labels,
-            parents=[""]*len(tree_labels),
+            labels=class_names,
+            parents=[""] * len(class_names),
             values=tree_vals,
             textinfo="label+value",
             marker=dict(colorscale="RdYlGn", colors=tree_vals, showscale=True)
@@ -395,54 +356,54 @@ def show_all_graphs(image: Image.Image, label, confidence, top3, all_preds, clas
                            template="plotly_dark", height=340)
         st.plotly_chart(fig9, use_container_width=True)
 
-    # GRAPH 10 — Waterfall chart of top vs bottom differences
-    sorted_idx2  = all_preds.argsort()[::-1]
-    wf_labels    = [class_names[i] for i in sorted_idx2]
-    wf_vals      = [round(float(all_preds[i])*100,2) for i in sorted_idx2]
-    wf_measure   = ["relative"]*len(wf_vals)
+    # Graph 10 — Waterfall
+    sorted_idx2 = all_preds.argsort()[::-1]
+    wf_labels   = [class_names[i] for i in sorted_idx2]
+    wf_vals     = [round(float(all_preds[i])*100, 2) for i in sorted_idx2]
     fig10 = go.Figure(go.Waterfall(
-        name="Confidence", measure=wf_measure,
+        name="Confidence",
+        measure=["relative"] * len(wf_vals),
         x=wf_labels, y=wf_vals,
         connector={"line": {"color": "#333"}},
         increasing={"marker": {"color": "#00cc96"}},
         decreasing={"marker": {"color": "#ef553b"}},
         text=[f"{v}%" for v in wf_vals], textposition="outside"
     ))
-    fig10.update_layout(title="💧 Graph 10 — Confidence Waterfall Chart (Cumulative Score Flow)",
+    fig10.update_layout(title="💧 Graph 10 — Confidence Waterfall Chart",
                         yaxis_title="Confidence %", template="plotly_dark", height=350)
     st.plotly_chart(fig10, use_container_width=True)
 
 
-# ====================== PROJECT OVERVIEW PAGE ====================== #
+# ====================== PROJECT OVERVIEW ====================== #
 def page_overview(class_names):
     st.markdown('<div class="page-heading">♻️ PROJECT OVERVIEW</div>', unsafe_allow_html=True)
-    st.markdown('<div class="page-sub">Waste Garbage AI Classification System — Complete Documentation</div>', unsafe_allow_html=True)
+    st.markdown('<div class="page-sub">Waste Garbage AI Classification System — Complete Documentation</div>',
+                unsafe_allow_html=True)
 
     st.markdown("""
     <div class="ov-grid">
         <div class="ov-card"><div class="icon">🤖</div><div class="label">AI Model</div><div class="val">MobileNetV2</div></div>
-        <div class="ov-card"><div class="icon">📦</div><div class="label">Total Classes</div><div class="val">{}</div></div>
+        <div class="ov-card"><div class="icon">📦</div><div class="label">Total Classes</div><div class="val">{cls}</div></div>
         <div class="ov-card"><div class="icon">📊</div><div class="label">Graphs per Scan</div><div class="val">10</div></div>
         <div class="ov-card"><div class="icon">🎯</div><div class="label">Input Size</div><div class="val">160×160</div></div>
         <div class="ov-card"><div class="icon">⚡</div><div class="label">Framework</div><div class="val">TensorFlow</div></div>
         <div class="ov-card"><div class="icon">🌐</div><div class="label">Interface</div><div class="val">Streamlit</div></div>
     </div>
-    """.format(len(class_names)), unsafe_allow_html=True)
+    """.format(cls=len(class_names)), unsafe_allow_html=True)
 
     st.markdown("---")
     st.markdown("### 📌 About This Project")
     st.markdown("""
-    This AI-powered Waste Garbage Classification System uses **Transfer Learning** with **MobileNetV2**
-    to detect and classify waste materials from uploaded images or live webcam feed.
-
-    The system helps in **smart waste segregation**, enabling better recycling and environmental management.
+    This AI-powered system uses **Transfer Learning** with **MobileNetV2** to detect and classify
+    waste materials from uploaded images or live webcam feed — enabling smart waste segregation
+    for better recycling and environmental management.
     """)
 
     st.markdown("### 🗑️ Supported Waste Categories")
-    cols = st.columns(4)
     icons = {"battery":"🔋","biological":"🦠","brown-glass":"🍶","cardboard":"📦",
              "clothes":"👕","green-glass":"🟢","metal":"🔩","paper":"📄",
              "plastic":"🧴","shoes":"👟","trash":"🗑️","white-glass":"⬜"}
+    cols = st.columns(4)
     for i, name in enumerate(class_names):
         with cols[i % 4]:
             ico = icons.get(name, "♻️")
@@ -450,61 +411,62 @@ def page_overview(class_names):
             <div class="ov-card" style="margin-bottom:12px;">
                 <div class="icon">{ico}</div>
                 <div class="label">{name.upper()}</div>
-            </div>
-            """, unsafe_allow_html=True)
+            </div>""", unsafe_allow_html=True)
 
     st.markdown("---")
-    st.markdown("### 📈 10 Visualization Graphs Included")
+    st.markdown("### 📈 10 Visualization Graphs")
     graphs = [
-        ("Graph 1", "Top 3 Confidence — Horizontal Bar Chart", "📊"),
-        ("Graph 2", "All Classes Probability — Pie/Donut Chart", "🥧"),
-        ("Graph 3", "Confidence Gauge — Speedometer Indicator", "🎯"),
-        ("Graph 4", "Top-6 Classes — Radar/Spider Chart", "🕸️"),
-        ("Graph 5", "Image RGB Channel Distribution", "🌈"),
-        ("Graph 6", "Pixel Intensity Heatmap (80×80)", "🌡️"),
-        ("Graph 7", "Probability Distribution — Violin Plot", "🎻"),
-        ("Graph 8", "All Classes Ranked — Full Bar Chart", "📉"),
-        ("Graph 9", "Probability Treemap (Size = Confidence)", "🗂️"),
-        ("Graph 10","Confidence Waterfall Chart (Cumulative)", "💧"),
+        ("Graph 1",  "Top 3 Confidence — Horizontal Bar",      "📊"),
+        ("Graph 2",  "All Classes Probability — Pie/Donut",     "🥧"),
+        ("Graph 3",  "Confidence Gauge — Speedometer",          "🎯"),
+        ("Graph 4",  "Top-6 Classes — Radar/Spider Chart",      "🕸️"),
+        ("Graph 5",  "Image RGB Channel Distribution",          "🌈"),
+        ("Graph 6",  "Pixel Intensity Heatmap (80×80)",         "🌡️"),
+        ("Graph 7",  "All Classes Probability Distribution",    "📊"),
+        ("Graph 8",  "All Classes Ranked — Full Bar Chart",     "📉"),
+        ("Graph 9",  "Probability Treemap (Size = Confidence)", "🗂️"),
+        ("Graph 10", "Confidence Waterfall Chart",              "💧"),
     ]
     gcols = st.columns(2)
     for i, (g, desc, ico) in enumerate(graphs):
         with gcols[i % 2]:
             st.markdown(f"""
-            <div class="ov-card" style="text-align:left; margin-bottom:12px; padding:16px 18px;">
+            <div class="ov-card" style="text-align:left; margin-bottom:12px; padding:14px 18px;">
                 <span style="font-family:Orbitron,monospace;color:#00ff88;font-size:0.85rem;">{ico} {g}</span>
                 <div class="label" style="margin-top:6px; color:#aaccbb;">{desc}</div>
-            </div>
-            """, unsafe_allow_html=True)
+            </div>""", unsafe_allow_html=True)
 
     st.markdown("---")
     st.markdown("### 🛠️ Tech Stack")
     st.markdown("""
-    | Component | Technology |
-    |-----------|------------|
-    | **Deep Learning** | TensorFlow 2.x + Keras |
-    | **Base Model** | MobileNetV2 (Transfer Learning) |
-    | **Frontend** | Streamlit |
-    | **Visualizations** | Plotly (10 chart types) |
-    | **Image Processing** | Pillow (PIL) + NumPy |
-    | **Data Analysis** | Pandas |
+| Component | Technology |
+|-----------|------------|
+| **Deep Learning** | TensorFlow 2.x + Keras |
+| **Base Model** | MobileNetV2 (Transfer Learning) |
+| **Frontend** | Streamlit |
+| **Visualizations** | Plotly (10 chart types) |
+| **Image Processing** | Pillow (PIL) + NumPy |
+| **Data** | Pandas |
     """)
 
 
-# ====================== DETECTION PAGE (shared for Upload & Webcam) ====================== #
+# ====================== DETECTION PAGE ====================== #
 def detection_page(mode: str, model, class_names):
     if mode == "upload":
         st.markdown('<div class="page-heading">📤 UPLOAD IMAGE</div>', unsafe_allow_html=True)
-        st.markdown('<div class="page-sub">Upload a waste image to classify and visualize with 10 graphs</div>', unsafe_allow_html=True)
-        col1, col2 = st.columns([1, 2])
+        st.markdown('<div class="page-sub">Upload a waste image to classify and visualize with 10 graphs</div>',
+                    unsafe_allow_html=True)
+
+        col1, col2 = st.columns(2)
         with col1:
-            uploaded_file = st.file_uploader("Upload waste image", type=["jpg","jpeg","png"])
+            uploaded_file = st.file_uploader("Upload waste image", type=["jpg", "jpeg", "png"])
             if uploaded_file:
                 image = Image.open(uploaded_file).convert("RGB")
                 st.image(image, caption="Uploaded Image", use_column_width=True)
                 detect_btn = st.button("🔍 Detect Waste", use_container_width=True)
             else:
                 detect_btn = False
+
         with col2:
             if uploaded_file and detect_btn:
                 with st.spinner("🔬 Analyzing image..."):
@@ -515,14 +477,18 @@ def detection_page(mode: str, model, class_names):
 
     else:  # webcam
         st.markdown('<div class="page-heading">📷 LIVE WEBCAM</div>', unsafe_allow_html=True)
-        st.markdown('<div class="page-sub">Use your camera to detect waste type in real-time with 10 graphs</div>', unsafe_allow_html=True)
-        cam_image = st.camera_input("Point camera at waste item")
-        if cam_image:
-            col1, col2 = st.columns([1, 2])
-            with col1:
+        st.markdown('<div class="page-sub">Use your camera to detect waste type in real-time with 10 graphs</div>',
+                    unsafe_allow_html=True)
+
+        col1, col2 = st.columns(2)
+        with col1:
+            cam_image = st.camera_input("Point camera at waste item")
+            if cam_image:
                 image = Image.open(cam_image).convert("RGB")
                 st.image(image, caption="Captured Image", use_column_width=True)
-            with col2:
+
+        with col2:
+            if cam_image:
                 with st.spinner("🔬 Analyzing..."):
                     lbl, conf, top3, all_preds = predict(image, model, class_names)
                 show_all_graphs(image, lbl, conf, top3, all_preds, class_names)
@@ -533,14 +499,13 @@ def main_app():
     model       = load_my_model()
     class_names = load_class_names()
 
-    # ── SIDEBAR NAVIGATION ──────────────────────────────── #
     with st.sidebar:
         st.markdown("""
-        <div style='font-family:Orbitron,monospace; color:#00ff88; font-size:1.1rem;
-                    letter-spacing:2px; padding:12px 4px 4px; text-shadow:0 0 12px #00ff8877;'>
+        <div style='font-family:Orbitron,monospace; color:#00ff88; font-size:1.05rem;
+                    letter-spacing:2px; padding:10px 4px 2px; text-shadow:0 0 12px #00ff8877;'>
             ♻️ WASTE AI
         </div>
-        <div style='color:#557766; font-size:0.8rem; padding-bottom:16px;'>
+        <div style='color:#557766; font-size:0.78rem; padding-bottom:14px;'>
             Garbage Classification System
         </div>
         """, unsafe_allow_html=True)
@@ -555,20 +520,10 @@ def main_app():
         }
         for label, key in pages.items():
             active = st.session_state.active_page == key
-            if st.button(label,
-                         key=f"nav_{key}",
-                         use_container_width=True,
+            if st.button(label, key=f"nav_{key}", use_container_width=True,
                          type="primary" if active else "secondary"):
                 st.session_state.active_page = key
                 st.rerun()
-
-        st.markdown("---")
-        st.markdown("**⚙️ SYSTEM STATUS**")
-        if model:
-            st.success("✅ Model Ready")
-        else:
-            st.error("❌ Model Error")
-        st.info(f"📦 Classes: {len(class_names)}")
 
         st.markdown("---")
         st.markdown("**🗑️ Waste Types**")
@@ -576,14 +531,18 @@ def main_app():
             st.write(f"• {name}")
 
         st.markdown("---")
+        if model:
+            st.success("✅ Model Ready")
+        else:
+            st.error("❌ Model Error")
+
+        st.markdown("---")
         if st.button("🚪 Logout", use_container_width=True):
             st.session_state.logged_in   = False
             st.session_state.active_page = "Project Overview"
             st.rerun()
 
-    # ── PAGE ROUTING ────────────────────────────────────── #
     page = st.session_state.active_page
-
     if page == "Project Overview":
         page_overview(class_names)
     elif page == "Upload Image":
@@ -598,9 +557,9 @@ if not st.session_state.logged_in:
 else:
     main_app()
 
-# ── FOOTER ─────────────────────────────────────────────── #
 st.markdown("""
-<div style='text-align:center; color:#335544; font-size:0.8rem; padding-top:20px; font-family:Rajdhani,sans-serif;'>
-    🤖 Powered by TensorFlow & Streamlit &nbsp;|&nbsp; Waste AI Classification System
+<div style='text-align:center; color:#335544; font-size:0.78rem; padding-top:20px;
+            font-family:Rajdhani,sans-serif;'>
+    🤖 Powered by TensorFlow &amp; Streamlit &nbsp;|&nbsp; Waste AI Classification System
 </div>
 """, unsafe_allow_html=True)
